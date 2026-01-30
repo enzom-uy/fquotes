@@ -1,7 +1,7 @@
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { Button } from "./ui/button";
 import { Input } from "./ui/input";
 import { FileUpload } from "./ui/file-upload";
@@ -14,10 +14,9 @@ import {
   FormMessage,
   FormDescription,
 } from "./ui/form";
-import { authClient, AuthSession } from "@/lib/auth-client";
 
 const profileFormSchema = z.object({
-  profile_picture_url: z.string().optional(),
+  image: z.string().optional(),
   email: z.string().email("Invalid email address"),
   name: z
     .string()
@@ -27,27 +26,22 @@ const profileFormSchema = z.object({
 
 type ProfileFormValues = z.infer<typeof profileFormSchema>;
 
-export const CreateProfileForm = () => {
-  const [session, setSession] = useState<AuthSession | null>();
-  const [nickname, setNickname] = useState<string>();
-  const [profilePic, setProfilePic] = useState<string>();
+interface Props {
+  email: string;
+  name: string;
+  profilePic?: string;
+}
+
+export const CreateProfileForm = ({ email, name, profilePic }: Props) => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
-
-  useEffect(() => {
-    authClient.getSession().then((data) => {
-      setSession(data.data);
-      setNickname(data.data?.user.name || "");
-      setProfilePic(data.data?.user.image || "");
-    });
-  }, []);
 
   const form = useForm<ProfileFormValues>({
     resolver: zodResolver(profileFormSchema),
     defaultValues: {
-      profile_picture_url: profilePic,
-      email: session?.user.email,
-      name: nickname,
+      image: profilePic,
+      email: email,
+      name: name,
     },
   });
 
@@ -56,12 +50,12 @@ export const CreateProfileForm = () => {
     setError(null);
 
     try {
-      const response = await fetch("http://localhost:5000/api/user/create", {
-        method: "POST",
+      const response = await fetch("http://localhost:5000/api/user/profile", {
+        method: "PATCH",
         headers: {
           "Content-Type": "application/json",
         },
-        credentials: "include", // Important for httpOnly cookies
+        credentials: "include",
         body: JSON.stringify(data),
       });
 
@@ -93,19 +87,12 @@ export const CreateProfileForm = () => {
 
         <FormField
           control={form.control}
-          name="profile_picture_url"
+          name="image"
           render={({ field }) => (
             <FormItem>
               <FormLabel>Profile Picture</FormLabel>
               <FormControl>
-                <FileUpload
-                  value={field.value}
-                  onChange={(file) => {
-                    // For now, just set a placeholder
-                    field.onChange(file ? "uploaded-file-placeholder" : "");
-                  }}
-                  disabled={isSubmitting}
-                />
+                <FileUpload value={field.value} disabled={isSubmitting} />
               </FormControl>
               <FormDescription>
                 Upload a profile picture (this is a placeholder for now)
@@ -122,7 +109,7 @@ export const CreateProfileForm = () => {
             <FormItem>
               <FormLabel>Email</FormLabel>
               <FormControl>
-                <Input {...field} type="email" disabled />
+                <Input {...field} type="email" disabled value={email} />
               </FormControl>
               <FormDescription>
                 Your email from the authentication token

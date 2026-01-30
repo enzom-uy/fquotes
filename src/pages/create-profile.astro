@@ -2,8 +2,20 @@
 import Layout from '@/layouts/layout.astro'
 import { CreateProfileForm } from '@/components/create-profile-form'
 
+const { user } = Astro.locals
 
-console.log("USER: ", Astro.locals)
+if (!user) {
+    return Astro.redirect('/')
+}
+
+const createdAt = new Date(user.createdAt).getTime()
+const updatedAt = new Date(user.updatedAt).getTime()
+const THRESHOLD_MS = 1000
+const profileCompleted = (updatedAt - createdAt) > THRESHOLD_MS
+if (profileCompleted) {
+    return Astro.redirect('/profile')
+}
+
 ---
 
 <Layout title="Create Profile - QuoteKeeper">
@@ -15,6 +27,9 @@ console.log("USER: ", Astro.locals)
       </p>
     </div>
         <CreateProfileForm
+            email={user.email}
+            name={user.name}
+            profilePic={user.image || undefined}
           client:load
         />
   </div>
