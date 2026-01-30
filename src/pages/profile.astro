@@ -1,0 +1,24 @@
+---
+import Layout from '@/layouts/layout.astro'
+
+export const prerender = false
+
+const user = Astro.locals.user
+const session = Astro.locals.session
+
+if (!session) {
+    return Astro.redirect("/")
+}
+---
+
+<Layout title="Profile - QuoteKeeper">
+  <div class="min-h-screen flex flex-col items-center justify-center px-6 gap-4">
+    <h1 class="text-4xl font-semibold">Profile</h1>
+    {user && (
+      <div class="text-center">
+        <p>Welcome, {user.name}</p>
+        <p class="text-sm text-gray-600">{user.email}</p>
+      </div>
+    )}
+  </div>
+</Layout>

@@ -1,0 +1,70 @@
+@import url("https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap");
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family:
+    "Inter",
+    -apple-system,
+    BlinkMacSystemFont,
+    "Segoe UI",
+    "Roboto",
+    "Oxygen",
+    "Ubuntu",
+    "Cantarell",
+    "Fira Sans",
+    "Droid Sans",
+    "Helvetica Neue",
+    sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+:root {
+  /* Backgrounds */
+  --color-background: #1e1e2e;
+  --color-background-elevated: #181825;
+  --color-background-muted: #313244;
+
+  /* Foregrounds */
+  --color-foreground: #cdd6f4;
+  --color-foreground-muted: #bac2de;
+  --color-foreground-subtle: #a6adc8;
+
+  /* Borders */
+  --color-border: #45475a;
+  --color-border-hover: #585b70;
+
+  /* Accents */
+  --color-primary: #89b4fa;
+  --color-primary-hover: #7aa2f7;
+  --color-accent: #cba6f7;
+
+  /* States */
+  --color-success: #a6e3a1;
+  --color-warning: #f9e2af;
+  --color-danger: #f38ba8;
+  --color-info: #89dceb;
+
+  /* Interactive Elements */
+  --color-input-bg: #313244;
+  --color-input-border: #45475a;
+  --color-input-focus: #89b4fa;
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+}

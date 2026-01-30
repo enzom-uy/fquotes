@@ -1,0 +1,26 @@
+---
+import Layout from '@/layouts/layout.astro'
+import { Logo } from '@/components/logo'
+import { IndexCards } from '@/components/index-cards'
+import { GoogleSignInButton } from '@/components/google-sign-in-button'
+---
+
+<Layout title="QuoteKeeper">
+  <div class="min-h-screen flex flex-col items-center gap-6 justify-center">
+    <Logo client:load />
+    <div class="flex flex-col items-center gap-2">
+      <h1 class="text-4xl font-semibold">QuoteKeeper</h1>
+      <p class="text-foreground-subtle text-xl mb-4">
+        Capture and save your favorite quotes
+      </p>
+      <p class="text-center max-w-[50ch] md:max-w-[46ch]">
+        Take photos of text from books, crop the image, and automatically
+        extract the quotes you want to remember. All from your browser.
+      </p>
+    </div>
+
+    <GoogleSignInButton client:load />
+
+    <IndexCards client:load />
+  </div>
+</Layout>

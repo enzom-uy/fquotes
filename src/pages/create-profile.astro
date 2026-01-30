@@ -1,0 +1,21 @@
+---
+import Layout from '@/layouts/layout.astro'
+import { CreateProfileForm } from '@/components/create-profile-form'
+
+
+console.log("USER: ", Astro.locals)
+---
+
+<Layout title="Create Profile - QuoteKeeper">
+  <div class="min-h-screen flex flex-col items-center gap-8 justify-center px-6 py-12">
+    <div class="text-center">
+      <h1 class="text-4xl font-semibold mb-2">Create Your Profile</h1>
+      <p class="text-foreground-subtle">
+        Complete your profile to get started with QuoteKeeper
+      </p>
+    </div>
+        <CreateProfileForm
+          client:load
+        />
+  </div>
+</Layout>
