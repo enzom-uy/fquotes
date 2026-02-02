@@ -1,0 +1,33 @@
+---
+import Layout from '@/layouts/layout.astro';
+
+export const prerender = false;
+
+const user = Astro.locals.user;
+const session = Astro.locals.session;
+
+// Redirect to home if not authenticated
+if (!session) {
+  return Astro.redirect('/');
+}
+---
+
+<Layout title="My Quotes - QuoteKeeper">
+  <main class="max-w-5xl mx-auto w-full px-4 py-8">
+    <div class="flex flex-col items-center justify-center gap-6 py-20">
+      <div class="text-6xl">📚</div>
+      <div class="text-center">
+        <h1 class="text-3xl font-bold mb-2">My Quotes</h1>
+        <p class="text-foreground-muted">
+          Your saved quotes will appear here
+        </p>
+      </div>
+      <a 
+        href="/" 
+        class="px-6 py-3 bg-gradient-to-r from-primary to-accent text-background font-semibold rounded-xl hover:opacity-90 transition-opacity"
+      >
+        Capture Your First Quote
+      </a>
+    </div>
+  </main>
+</Layout>

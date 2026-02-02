@@ -3,24 +3,48 @@ import Layout from '@/layouts/layout.astro'
 import { Logo } from '@/components/logo'
 import { IndexCards } from '@/components/index-cards'
 import { GoogleSignInButton } from '@/components/google-sign-in-button'
+import { CaptureImage } from '@/components/capture-image'
+
+export const prerender = false
+
+const user = Astro.locals.user
+const session = Astro.locals.session
+
+let profileCompleted = true
+if (session && user) {
+  const createdAt = new Date(user.createdAt).getTime()
+  const updatedAt = new Date(user.updatedAt).getTime()
+  const THRESHOLD_MS = 5000 // 5 seconds
+  profileCompleted = (updatedAt - createdAt) > THRESHOLD_MS
+  
+  if (!profileCompleted) {
+    return Astro.redirect('/create-profile')
+  }
+}
 ---
 
-<Layout title="QuoteKeeper">
-  <div class="min-h-screen flex flex-col items-center gap-6 justify-center">
-    <Logo client:load />
-    <div class="flex flex-col items-center gap-2">
-      <h1 class="text-4xl font-semibold">QuoteKeeper</h1>
-      <p class="text-foreground-subtle text-xl mb-4">
-        Capture and save your favorite quotes
-      </p>
-      <p class="text-center max-w-[50ch] md:max-w-[46ch]">
-        Take photos of text from books, crop the image, and automatically
-        extract the quotes you want to remember. All from your browser.
-      </p>
+<Layout title={session ? "Capture Quote - QuoteKeeper" : "QuoteKeeper"} showNavbar={!!session}>
+  {session && user ? (
+    <main class="max-w-5xl mx-auto w-full px-4 py-8">
+      <CaptureImage client:load />
+    </main>
+  ) : (
+    <div class="min-h-screen flex flex-col items-center gap-6 justify-center px-6">
+      <Logo client:load />
+      <div class="flex flex-col items-center gap-2">
+        <h1 class="text-4xl font-semibold">QuoteKeeper</h1>
+        <p class="text-foreground-subtle text-xl mb-4">
+          Capture and save your favorite quotes
+        </p>
+        <p class="text-center max-w-[50ch] md:max-w-[46ch]">
+          Take photos of text from books, crop the image, and automatically
+          extract the quotes you want to remember. All from your browser.
+        </p>
+      </div>
+
+      <GoogleSignInButton client:load />
+
+      <IndexCards client:load />
     </div>
-
-    <GoogleSignInButton client:load />
-
-    <IndexCards client:load />
-  </div>
+  )}
 </Layout>

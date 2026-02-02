@@ -1,11 +1,20 @@
 ---
 import '@/styles/globals.css'
+import Navbar from '@/components/navbar.astro'
 
 interface Props {
   title?: string
+  showNavbar?: boolean
 }
 
-const { title = 'QuoteKeeper' } = Astro.props
+const { title = 'QuoteKeeper', showNavbar = true } = Astro.props
+
+// Get user and session from middleware
+const user = Astro.locals.user
+const session = Astro.locals.session
+
+// Only show navbar if user is authenticated and showNavbar is true
+const shouldShowNavbar = showNavbar && session && user
 ---
 
 <!doctype html>
@@ -16,7 +25,8 @@ const { title = 'QuoteKeeper' } = Astro.props
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <title>{title}</title>
   </head>
-  <body class="px-6">
+  <body>
+    {shouldShowNavbar && <Navbar user={user} />}
     <slot />
   </body>
 </html>

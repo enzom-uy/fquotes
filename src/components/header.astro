@@ -1,0 +1,41 @@
+---
+interface Props {
+  showNav?: boolean;
+}
+
+const { showNav = true } = Astro.props;
+---
+
+<header class="border-b border-border bg-background-elevated">
+  <div class="max-w-5xl mx-auto px-4 py-4 flex items-center justify-between">
+    <a href="/" class="flex items-center gap-3 hover:opacity-90 transition-opacity">
+      <div class="w-10 h-10 bg-gradient-to-br from-primary to-accent rounded-lg flex items-center justify-center text-2xl">
+        📚
+      </div>
+      <h1 class="text-xl font-semibold">QuoteKeeper</h1>
+    </a>
+    
+    {showNav && (
+      <nav class="flex items-center gap-4">
+        <a 
+          href="/" 
+          class="px-4 py-2 text-sm text-foreground-muted hover:text-foreground transition-colors"
+        >
+          Capture
+        </a>
+        <a 
+          href="/quotes" 
+          class="px-4 py-2 text-sm text-foreground-muted hover:text-foreground transition-colors"
+        >
+          My Quotes
+        </a>
+        <a 
+          href="/profile" 
+          class="px-4 py-2 text-sm text-foreground-muted hover:text-foreground transition-colors"
+        >
+          Profile
+        </a>
+      </nav>
+    )}
+  </div>
+</header>

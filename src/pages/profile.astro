@@ -1,4 +1,5 @@
 ---
+// TODO: come back to this after we have proper data to show
 import Layout from '@/layouts/layout.astro'
 
 export const prerender = false
@@ -6,13 +7,28 @@ export const prerender = false
 const user = Astro.locals.user
 const session = Astro.locals.session
 
-if (!session) {
+if (!session || !user) {
     return Astro.redirect("/")
 }
+const fetchUrl = new URL(`${import.meta.env.PUBLIC_BACKEND_URL}/user/${user.email}`)
+let userData
+
+try {
+    const response = await fetch(fetchUrl, {
+    method: 'GET',
+    credentials: 'include'
+    }).then(res => res.json())
+
+    userData = response
+    } catch (error) {
+        console.error(error)
+        return Astro.redirect('/')
+}
+
 ---
 
 <Layout title="Profile - QuoteKeeper">
-  <div class="min-h-screen flex flex-col items-center justify-center px-6 gap-4">
+  <main class="flex-1 flex flex-col items-center justify-center px-6 gap-4">
     <h1 class="text-4xl font-semibold">Profile</h1>
     {user && (
       <div class="text-center">
@@ -20,5 +36,5 @@ if (!session) {
         <p class="text-sm text-gray-600">{user.email}</p>
       </div>
     )}
-  </div>
+  </main>
 </Layout>
