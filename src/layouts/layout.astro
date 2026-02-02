@@ -1,6 +1,7 @@
 ---
 import '@/styles/globals.css'
 import Navbar from '@/components/navbar.astro'
+import { Toaster } from '@/components/ui/toaster'
 
 interface Props {
   title?: string
@@ -28,5 +29,6 @@ const shouldShowNavbar = showNavbar && session && user
   <body>
     {shouldShowNavbar && <Navbar user={user} />}
     <slot />
+    <Toaster client:load />
   </body>
 </html>
