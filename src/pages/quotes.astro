@@ -1,5 +1,6 @@
 ---
 import Layout from '@/layouts/layout.astro';
+import { BookOpen, User, Calendar, Trash2, Search, ChevronLeft, ChevronRight } from 'lucide-react';
 
 export const prerender = false;
 
@@ -10,24 +11,190 @@ const session = Astro.locals.session;
 if (!session) {
   return Astro.redirect('/');
 }
+
+// Dummy pagination data
+const currentPage: number = 1;
+const totalPages: number = 5;
+const totalQuotes: number = 28;
+
+// Dummy data for quotes
+const dummyQuotes = [
+  {
+    id: '1',
+    text: 'It is a truth universally acknowledged, that a single man in possession of a good fortune, must be in want of a wife.',
+    book: 'Pride and Prejudice',
+    author: 'Jane Austen',
+    chapter: 'Chapter 1',
+    createdAt: '2024-01-15',
+  },
+  {
+    id: '2',
+    text: 'All happy families are alike; each unhappy family is unhappy in its own way.',
+    book: 'Anna Karenina',
+    author: 'Leo Tolstoy',
+    chapter: 'Part 1',
+    createdAt: '2024-01-20',
+  },
+  {
+    id: '3',
+    text: 'It was the best of times, it was the worst of times, it was the age of wisdom, it was the age of foolishness.',
+    book: 'A Tale of Two Cities',
+    author: 'Charles Dickens',
+    chapter: 'Book 1, Chapter 1',
+    createdAt: '2024-01-25',
+  },
+  {
+    id: '4',
+    text: 'Call me Ishmael. Some years ago—never mind how long precisely—having little or no money in my purse, and nothing particular to interest me on shore, I thought I would sail about a little and see the watery part of the world.',
+    book: 'Moby-Dick',
+    author: 'Herman Melville',
+    chapter: 'Chapter 1',
+    createdAt: '2024-02-01',
+  },
+  {
+    id: '5',
+    text: 'In my younger and more vulnerable years my father gave me some advice that I\'ve been turning over in my mind ever since.',
+    book: 'The Great Gatsby',
+    author: 'F. Scott Fitzgerald',
+    chapter: 'Chapter 1',
+    createdAt: '2024-02-02',
+  },
+  {
+    id: '6',
+    text: 'Whether I shall turn out to be the hero of my own life, or whether that station will be held by anybody else, these pages must show.',
+    book: 'David Copperfield',
+    author: 'Charles Dickens',
+    chapter: 'Chapter 1',
+    createdAt: '2024-02-02',
+  },
+];
+
+const formatDate = (dateString: string) => {
+  const date = new Date(dateString);
+  return date.toLocaleDateString('en-US', {
+    month: 'short',
+    day: 'numeric',
+    year: 'numeric',
+  });
+};
 ---
 
 <Layout title="My Quotes - QuoteKeeper">
-  <main class="max-w-5xl mx-auto w-full px-4 py-8">
-    <div class="flex flex-col items-center justify-center gap-6 py-20">
-      <div class="text-6xl">📚</div>
-      <div class="text-center">
-        <h1 class="text-3xl font-bold mb-2">My Quotes</h1>
-        <p class="text-foreground-muted">
-          Your saved quotes will appear here
-        </p>
+  <main class="max-w-6xl mx-auto w-full px-4 py-8">
+    <div class="space-y-6">
+      <!-- Header -->
+      <div class="flex flex-col gap-4">
+        <div>
+          <h1 class="text-3xl font-bold">My Quotes</h1>
+          <p class="text-foreground-muted mt-1">
+            {totalQuotes} quotes in your collection
+          </p>
+        </div>
+
+        <!-- Search Bar -->
+        <div class="relative">
+          <Search size={20} className="absolute left-3 top-1/2 -translate-y-1/2 text-foreground-muted" />
+          <input
+            type="text"
+            placeholder="Search quotes, books, or authors..."
+            class="w-full pl-10 pr-4 py-3 bg-background-elevated border border-border rounded-lg text-foreground placeholder:text-foreground-muted focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-all"
+          />
+        </div>
       </div>
-      <a 
-        href="/" 
-        class="px-6 py-3 bg-gradient-to-r from-primary to-accent text-background font-semibold rounded-xl hover:opacity-90 transition-opacity"
-      >
-        Capture Your First Quote
-      </a>
+
+      <!-- Quotes Grid -->
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        {dummyQuotes.map((quote) => (
+          <div
+            class="bg-background-elevated border border-background-muted rounded-lg p-6 hover:border-primary transition-colors flex flex-col gap-4"
+          >
+            <!-- Quote Text -->
+            <blockquote class="text-foreground leading-relaxed">
+              "{quote.text}"
+            </blockquote>
+
+            <!-- Book & Author Info -->
+            <div class="flex flex-col gap-2 text-sm text-foreground-muted border-t border-background-muted pt-4">
+              <div class="flex items-center gap-2">
+                <BookOpen size={16} className="text-primary" />
+                <span>{quote.book}</span>
+              </div>
+              <div class="flex items-center gap-2">
+                <User size={16} className="text-accent" />
+                <span>{quote.author}</span>
+              </div>
+              {quote.chapter && (
+                <div class="flex items-center gap-2">
+                  <span class="text-foreground-muted">
+                    {quote.chapter}
+                  </span>
+                </div>
+              )}
+            </div>
+
+            <!-- Footer with Date and Actions -->
+            <div class="flex items-center justify-between mt-auto border-t border-background-muted pt-4">
+              <div class="flex items-center gap-2 text-sm text-foreground-muted">
+                <Calendar size={14} />
+                <span>{formatDate(quote.createdAt)}</span>
+              </div>
+
+              <div class="flex items-center gap-2">
+                <button
+                  class="p-2 text-danger hover:text-danger hover:bg-danger/10 rounded-lg transition-colors"
+                  title="Delete quote"
+                >
+                  <Trash2 size={16} />
+                </button>
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      <!-- Pagination -->
+      <div class="flex items-center justify-between border-t border-background-muted pt-6">
+        <!-- Page Info -->
+        <div class="text-sm text-foreground-muted">
+          Showing <span class="font-medium text-foreground">{(currentPage - 1) * 6 + 1}</span> to <span class="font-medium text-foreground">{Math.min(currentPage * 6, totalQuotes)}</span> of <span class="font-medium text-foreground">{totalQuotes}</span> quotes
+        </div>
+
+        <!-- Pagination Controls -->
+        <div class="flex items-center gap-2">
+          <!-- Previous Button -->
+          <button
+            disabled={currentPage === 1}
+            class="p-2 rounded-lg border border-border bg-background-elevated text-foreground hover:bg-background-muted hover:border-primary transition-all disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-background-elevated disabled:hover:border-border"
+            title="Previous page"
+          >
+            <ChevronLeft size={20} />
+          </button>
+
+          <!-- Page Numbers -->
+          <div class="flex items-center gap-1">
+            {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+              <button
+                class={`min-w-10 h-10 px-3 rounded-lg border transition-all ${
+                  page === currentPage
+                    ? 'bg-primary text-background border-primary font-semibold'
+                    : 'bg-background-elevated border-border text-foreground hover:bg-background-muted hover:border-primary'
+                }`}
+              >
+                {page}
+              </button>
+            ))}
+          </div>
+
+          <!-- Next Button -->
+          <button
+            disabled={currentPage === totalPages}
+            class="p-2 rounded-lg border border-border bg-background-elevated text-foreground hover:bg-background-muted hover:border-primary transition-all disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-background-elevated disabled:hover:border-border"
+            title="Next page"
+          >
+            <ChevronRight size={20} />
+          </button>
+        </div>
+      </div>
     </div>
   </main>
 </Layout>

@@ -65,7 +65,8 @@ body {
     @apply border-border;
   }
   body {
-    @apply bg-background text-foreground;
+    @apply text-foreground;
+    background-color: #1e1e2e !important;
   }
   :root {
     /* Catppuccin Mocha Theme - Dark Mode */
