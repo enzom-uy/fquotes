@@ -1,31 +1,44 @@
 import { useState, useRef } from "react";
-import { Camera, Upload, X, Check, Trash2, Plus } from "lucide-react";
+import {
+  Camera,
+  Upload,
+  X,
+  Check,
+  Trash2,
+  Plus,
+  Save,
+  Loader2,
+} from "lucide-react";
 import { Button } from "./ui/button";
 import { createWorker, createScheduler } from "tesseract.js";
-import { EditableQuoteCard } from "./editable-quote-card";
-import {
-  Dialog,
-  DialogContent,
-  DialogTrigger,
-} from "./ui/dialog";
+import { EditableQuoteCard, type QuoteMetadata } from "./editable-quote-card";
+import { BookSearch, type BookResult } from "./book-search";
+import { Dialog, DialogContent, DialogTrigger } from "./ui/dialog";
 import { useToast } from "@/hooks/use-toast";
+import { useSession } from "@/lib/auth-client";
 
 interface CapturedImage {
   id: string;
   data: string;
 }
 
+const BACKEND_URL =
+  import.meta.env.PUBLIC_BACKEND_URL || "http://localhost:5000/api";
+
 export const CaptureImage = () => {
   const [capturedImages, setCapturedImages] = useState<CapturedImage[]>([]);
   const [isProcessing, setIsProcessing] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
   const [processingProgress, setProcessingProgress] = useState({
     current: 0,
     total: 0,
   });
-  const [texts, setTexts] = useState<string[]>([]);
+  const [quotesMetadata, setQuotesMetadata] = useState<QuoteMetadata[]>([]);
+  const [selectedBooks, setSelectedBooks] = useState<(BookResult | null)[]>([]);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const cameraInputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
+  const { data: session } = useSession();
 
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
@@ -66,7 +79,16 @@ export const CaptureImage = () => {
           });
           const ret = await worker.recognize(capturedImages[i].data);
           console.log(`Image ${i + 1} text:`, ret.data.text);
-          setTexts((prevTexts) => [...prevTexts, ret.data.text]);
+          setQuotesMetadata((prev) => [
+            ...prev,
+            {
+              text: ret.data.text,
+              chapter: "",
+              isPublic: false,
+              isFavorite: false,
+              tags: [],
+            },
+          ]);
         }
 
         await worker.terminate();
@@ -99,22 +121,30 @@ export const CaptureImage = () => {
           }),
         );
 
-        setTexts(results);
+        setQuotesMetadata(
+          results.map((text) => ({
+            text,
+            chapter: "",
+            isPublic: false,
+            isFavorite: false,
+            tags: [],
+          })),
+        );
         await scheduler.terminate();
       }
 
       setIsProcessing(false);
-      
+
       // Show success toast
       toast({
         title: "Processing complete!",
-        description: `Successfully extracted text from ${capturedImages.length} image${capturedImages.length !== 1 ? 's' : ''}.`,
+        description: `Successfully extracted text from ${capturedImages.length} image${capturedImages.length !== 1 ? "s" : ""}.`,
         variant: "success",
       });
     } catch (error) {
       console.error(error);
       setIsProcessing(false);
-      
+
       // Show error toast
       toast({
         title: "Processing failed",
@@ -124,21 +154,121 @@ export const CaptureImage = () => {
     }
   };
 
-  const handleUpdateText = (index: number, newText: string) => {
-    setTexts((prevTexts) =>
-      prevTexts.map((text, i) => (i === index ? newText : text)),
+  const handleUpdateQuote = (index: number, metadata: QuoteMetadata) => {
+    setQuotesMetadata((prev) =>
+      prev.map((q, i) => (i === index ? metadata : q)),
     );
   };
 
   const handleClearAll = () => {
     setCapturedImages([]);
-    setTexts([]);
+    setQuotesMetadata([]);
+    setSelectedBooks([]);
     if (fileInputRef.current) fileInputRef.current.value = "";
     if (cameraInputRef.current) cameraInputRef.current.value = "";
   };
 
   const handleAddMore = () => {
     fileInputRef.current?.click();
+  };
+
+  const handleSaveQuotes = async () => {
+    if (!session?.user?.id) {
+      toast({
+        title: "Not authenticated",
+        description: "Please sign in to save quotes.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (quotesMetadata.length === 0) return;
+
+    // Validate that all quotes have text
+    const emptyQuotes = quotesMetadata.filter((q) => !q.text.trim());
+    if (emptyQuotes.length > 0) {
+      toast({
+        title: "Empty quotes",
+        description: "Please make sure all quotes have text before saving.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setIsSaving(true);
+
+    try {
+      // Group quotes by their selected book
+      // Build a map: bookKey -> { bookData, quoteIndices }
+      const bookGroups = new Map<
+        string,
+        { book: BookResult | null; indices: number[] }
+      >();
+
+      quotesMetadata.forEach((_, index) => {
+        const book = selectedBooks[index] ?? null;
+        const key = book
+          ? `${book.bookId ?? ""}-${book.openlibraryId ?? ""}-${book.title}`
+          : "__no_book__";
+
+        if (!bookGroups.has(key)) {
+          bookGroups.set(key, { book, indices: [] });
+        }
+        bookGroups.get(key)!.indices.push(index);
+      });
+
+      // Send one request per book group
+      const requests = Array.from(bookGroups.values()).map(
+        ({ book, indices }) => {
+          const payload = {
+            userId: session.user.id,
+            ...(book?.bookId && { bookId: book.bookId }),
+            ...(book?.openlibraryId && { openlibraryId: book.openlibraryId }),
+            quotes: indices.map((i) => {
+              const q = quotesMetadata[i];
+              return {
+                text: q.text.trim(),
+                ...(q.chapter && { chapter: q.chapter }),
+                isPublic: q.isPublic,
+                isFavorite: q.isFavorite,
+                ...(q.tags.length > 0 && { tags: q.tags }),
+              };
+            }),
+          };
+
+          return fetch(`${BACKEND_URL}/quotes`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            credentials: "include",
+            body: JSON.stringify(payload),
+          });
+        },
+      );
+
+      const responses = await Promise.all(requests);
+      const failedResponses = responses.filter((r) => !r.ok);
+
+      if (failedResponses.length > 0) {
+        throw new Error(`${failedResponses.length} request(s) failed`);
+      }
+
+      toast({
+        title: "Quotes saved!",
+        description: `Successfully saved ${quotesMetadata.length} quote${quotesMetadata.length !== 1 ? "s" : ""}.`,
+        variant: "success",
+      });
+
+      handleClearAll();
+    } catch (error) {
+      console.error("Error saving quotes:", error);
+      toast({
+        title: "Failed to save",
+        description: `Error saving quotes: ${error}`,
+        variant: "destructive",
+      });
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   if (capturedImages.length > 0) {
@@ -168,14 +298,14 @@ export const CaptureImage = () => {
           <div className="flex items-center justify-between">
             <div>
               <h2 className="text-2xl font-bold">
-                {texts.length > 0 ? "Extracted Quotes" : "Preview"}
+                {quotesMetadata.length > 0 ? "Extracted Quotes" : "Preview"}
               </h2>
               <p className="text-sm text-foreground-muted">
                 {capturedImages.length} image
                 {capturedImages.length !== 1 ? "s" : ""} selected
               </p>
             </div>
-            {texts.length === 0 && (
+            {quotesMetadata.length === 0 && (
               <button
                 onClick={handleClearAll}
                 className="p-2 rounded-lg hover:bg-background-muted transition-colors"
@@ -187,7 +317,7 @@ export const CaptureImage = () => {
           </div>
 
           {/* Before processing: Image Grid Preview */}
-          {texts.length === 0 && (
+          {quotesMetadata.length === 0 && (
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
               {capturedImages.map((image) => (
                 <div
@@ -227,79 +357,116 @@ export const CaptureImage = () => {
 
           {/* Action Buttons */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            <Button
-              onClick={texts.length === 0 ? handleProcess : handleClearAll}
-              disabled={isProcessing}
-              className={`flex items-center justify-center gap-2 ${
-                texts.length === 0
-                  ? "bg-gradient-to-r from-primary to-accent text-background font-semibold hover:opacity-90"
-                  : "bg-danger text-background font-semibold hover:opacity-90"
-              } disabled:opacity-50 disabled:cursor-not-allowed ${
-                texts.length > 0 ? "sm:col-span-2" : ""
-              }`}
-            >
-              {isProcessing ? (
-                <>
-                  <div className="w-5 h-5 border-2 border-background/20 border-t-background rounded-full animate-spin" />
-                  Processing {processingProgress.current}/
-                  {processingProgress.total}...
-                </>
-              ) : texts.length === 0 ? (
-                <>
-                  <Check size={20} />
-                  Extract Text
-                </>
-              ) : (
-                <>
+            {quotesMetadata.length === 0 ? (
+              <Button
+                onClick={handleProcess}
+                disabled={isProcessing}
+                className="flex items-center justify-center gap-2 bg-gradient-to-r from-primary to-accent text-background font-semibold hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {isProcessing ? (
+                  <>
+                    <div className="w-5 h-5 border-2 border-background/20 border-t-background rounded-full animate-spin" />
+                    Processing {processingProgress.current}/
+                    {processingProgress.total}...
+                  </>
+                ) : (
+                  <>
+                    <Check size={20} />
+                    Extract Text
+                  </>
+                )}
+              </Button>
+            ) : (
+              <>
+                <Button
+                  onClick={handleSaveQuotes}
+                  disabled={isSaving}
+                  className="flex items-center justify-center gap-2 bg-gradient-to-r from-primary to-accent text-background font-semibold hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {isSaving ? (
+                    <>
+                      <Loader2 size={20} className="animate-spin" />
+                      Saving...
+                    </>
+                  ) : (
+                    <>
+                      <Save size={20} />
+                      Save Quotes
+                    </>
+                  )}
+                </Button>
+                <Button
+                  onClick={handleClearAll}
+                  disabled={isSaving}
+                  className="flex items-center justify-center gap-2 bg-danger text-background font-semibold hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
                   <X size={20} />
                   Start Over
-                </>
-              )}
-            </Button>
+                </Button>
+              </>
+            )}
           </div>
 
-          {/* After processing: Images with their extracted text */}
-          {texts.length > 0 && (
+          {/* After processing: Images with book search and extracted text */}
+          {quotesMetadata.length > 0 && (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                {texts.map((text, index) => (
-                  <div key={index} className="flex flex-col gap-3">
-                    {/* Image preview with Dialog */}
-                    <Dialog>
-                      <DialogTrigger asChild>
-                        <button className="relative bg-background-elevated border border-background-muted rounded-lg overflow-hidden hover:border-primary transition-colors cursor-pointer group">
-                          <img
-                            src={capturedImages[index]?.data}
-                            alt={`Quote ${index + 1}`}
-                            className="w-full h-auto object-contain"
-                          />
-                          <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors flex items-center justify-center">
-                            <span className="text-white opacity-0 group-hover:opacity-100 transition-opacity text-sm font-medium bg-black/50 px-3 py-1.5 rounded-lg">
-                              Click to enlarge
-                            </span>
-                          </div>
-                        </button>
-                      </DialogTrigger>
-                      <DialogContent className="max-w-[90vw] max-h-[90vh] p-0 overflow-hidden">
+              {quotesMetadata.map((quoteData, index) => (
+                <div key={index} className="flex flex-col gap-3">
+                  {/* Image preview with Dialog */}
+                  <Dialog>
+                    <DialogTrigger asChild>
+                      <button className="relative bg-background-elevated border border-background-muted rounded-lg overflow-hidden hover:border-primary transition-colors cursor-pointer group">
                         <img
                           src={capturedImages[index]?.data}
-                          alt={`Quote ${index + 1} - Full size`}
-                          className="w-full h-full object-contain"
+                          alt={`Quote ${index + 1}`}
+                          className="w-full h-auto object-contain"
                         />
-                      </DialogContent>
-                    </Dialog>
-                    {/* Editable quote card */}
-                    <EditableQuoteCard
-                      text={text}
-                      index={index}
-                      onUpdate={handleUpdateText}
-                    />
-                  </div>
-                ))}
+                        <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors flex items-center justify-center">
+                          <span className="text-white opacity-0 group-hover:opacity-100 transition-opacity text-sm font-medium bg-black/50 px-3 py-1.5 rounded-lg">
+                            Click to enlarge
+                          </span>
+                        </div>
+                      </button>
+                    </DialogTrigger>
+                    <DialogContent className="max-w-[90vw] max-h-[90vh] p-0 overflow-hidden">
+                      <img
+                        src={capturedImages[index]?.data}
+                        alt={`Quote ${index + 1} - Full size`}
+                        className="w-full h-full object-contain"
+                      />
+                    </DialogContent>
+                  </Dialog>
+                  {/* Book search per quote */}
+                  <BookSearch
+                    onSelect={(book) =>
+                      setSelectedBooks((prev) => {
+                        const updated = [...prev];
+                        updated[index] = book;
+                        return updated;
+                      })
+                    }
+                    onClear={() =>
+                      setSelectedBooks((prev) => {
+                        const updated = [...prev];
+                        updated[index] = null;
+                        return updated;
+                      })
+                    }
+                    selectedBook={selectedBooks[index] ?? null}
+                  />
+                  {/* Editable quote card */}
+                  <EditableQuoteCard
+                    metadata={quoteData}
+                    index={index}
+                    onUpdate={handleUpdateQuote}
+                  />
+                </div>
+              ))}
             </div>
           )}
 
           {/* Next Steps Info - Only show before processing */}
-          {texts.length === 0 && (
+          {quotesMetadata.length === 0 && (
             <div className="bg-background-elevated border border-background-muted rounded-lg p-4">
               <p className="text-sm text-foreground-muted">
                 <span className="text-primary font-semibold">Next step:</span>{" "}
