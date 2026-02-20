@@ -48,6 +48,12 @@ export const BookSearch = ({
   const { data: results = [], isFetching } = useBookSearch(debouncedQuery);
 
   const handleSelect = (book: BookResult) => {
+    console.log("📖 Book selected:", book);
+    console.log("   - title:", book.title);
+    console.log("   - authorName:", book.authorName);
+    console.log("   - bookId:", book.bookId);
+    console.log("   - openlibraryId:", book.openlibraryId);
+    console.log("   - coverUrl:", book.coverUrl);
     onSelect(book);
     setQuery("");
     setOpen(false);

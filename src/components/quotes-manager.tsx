@@ -3,27 +3,20 @@ import {
   useRef,
   useEffect,
   type KeyboardEvent,
-  type ReactNode,
 } from "react";
 import {
   Search,
   RotateCcw,
-  BookOpen,
-  User,
-  Calendar,
   Trash2,
   Loader2,
   AlertTriangle,
   MoreHorizontal,
   X,
-  ChevronLeft,
-  ChevronRight,
 } from "lucide-react";
 import { useSearchQuotes } from "@/hooks/use-search-quotes";
 import { useDeleteQuotes } from "@/hooks/use-delete-quotes";
+import { useUpdateQuote, type UpdateQuotePayload } from "@/hooks/use-update-quote";
 import { QueryProvider } from "./query-provider";
-import { Checkbox } from "./ui/checkbox";
-import { Skeleton } from "./ui/skeleton";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -41,76 +34,12 @@ import {
   DropdownMenuTrigger,
 } from "./ui/dropdown-menu";
 import { toast } from "@/hooks/use-toast";
-
-// ---------- Types ----------
-
-interface QuoteBook {
-  id?: string;
-  title: string;
-  authorName: string | null;
-  coverUrl?: string | null;
-}
-
-export interface QuoteData {
-  id: string;
-  text: string;
-  chapter: string | null;
-  isPublic: boolean;
-  isFavorite: boolean;
-  tags: string[] | null;
-  createdAt: string;
-  bookId: string;
-  book: QuoteBook | null;
-}
-
-interface PaginationInfo {
-  currentPage: number;
-  totalPages: number;
-  totalQuotes: number;
-  showingFrom: number;
-  showingTo: number;
-  pageNumbers: (number | "...")[];
-}
-
-interface QuotesManagerProps {
-  userId: string;
-  quotes: QuoteData[];
-  pagination: PaginationInfo;
-  fetchError: string;
-}
-
-// ---------- Helpers ----------
-
-function highlightMatches(text: string, query: string): ReactNode {
-  if (!query.trim()) return text;
-  const escaped = query.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-  const regex = new RegExp(`(${escaped})`, "gi");
-  const parts = text.split(regex);
-  if (parts.length === 1) return text;
-  return parts.map((part, i) =>
-    part.toLowerCase() === query.toLowerCase() ? (
-      <mark
-        key={i}
-        className="bg-primary/25 text-foreground rounded-sm px-0.5"
-      >
-        {part}
-      </mark>
-    ) : (
-      part
-    ),
-  );
-}
-
-const formatDate = (dateString: string) => {
-  const date = new Date(dateString);
-  return date.toLocaleDateString("en-US", {
-    month: "short",
-    day: "numeric",
-    year: "numeric",
-  });
-};
-
-// ---------- Components ----------
+import { type QuotesManagerProps, type QuoteData, type PaginationInfo, type QuoteBook } from "./quotes-manager/types";
+import { QuoteCard } from "./quotes-manager/quote-card";
+import { QuoteCardSkeleton } from "./quotes-manager/quote-card-skeleton";
+import { EmptyState } from "./quotes-manager/empty-state";
+import { QuotesPagination } from "./quotes-manager/quotes-pagination";
+import type { BookResult } from "./book-search";
 
 export const QuotesManager = (props: QuotesManagerProps) => (
   <QueryProvider>
@@ -137,8 +66,6 @@ const QuotesManagerInner = ({
 
   // --- Delete state ---
   const [deleteTarget, setDeleteTarget] = useState<string[] | null>(null);
-  // Keep a snapshot of deleteTarget so the dialog content doesn't flash
-  // "undefined" while the close animation plays out.
   const deleteTargetSnapshot = useRef<string[]>([]);
   if (deleteTarget !== null) {
     deleteTargetSnapshot.current = deleteTarget;
@@ -161,6 +88,17 @@ const QuotesManagerInner = ({
   });
   const deleteMutation = useDeleteQuotes();
 
+  // --- Edit state ---
+  const [editingQuoteId, setEditingQuoteId] = useState<string | null>(null);
+  const [editedFields, setEditedFields] = useState<{
+    text: string;
+    chapter: string;
+    isPublic: boolean;
+    tags: string[];
+    selectedBook: BookResult | null;
+  } | null>(null);
+  const updateMutation = useUpdateQuote();
+
   // Persist bulk-delete state to sessionStorage
   useEffect(() => {
     try {
@@ -179,9 +117,13 @@ const QuotesManagerInner = ({
     }
   }, [bulkMode, selectedIds]);
 
-  // --- Local quotes state (to remove deleted quotes from view without full reload) ---
+  // --- Local quotes state ---
   const [deletedIds, setDeletedIds] = useState<Set<string>>(new Set());
-  const quotes = initialQuotes.filter((q) => !deletedIds.has(q.id));
+  const [quotes, setQuotes] = useState(initialQuotes);
+
+  useEffect(() => {
+    setQuotes(initialQuotes);
+  }, [initialQuotes]);
 
   // --- Search handlers ---
   const handleSearch = () => setActiveQuery(inputValue.trim());
@@ -221,14 +163,12 @@ const QuotesManagerInner = ({
             setBulkMode(false);
           }
           toast({
-            title: idsToDelete.length === 1
-              ? "Quote deleted"
-              : `${idsToDelete.length} quotes deleted`,
+            title:
+              idsToDelete.length === 1
+                ? "Quote deleted"
+                : `${idsToDelete.length} quotes deleted`,
           });
-          // If we're in search mode, the search cache is now stale.
-          // A simple approach: if search is active, re-trigger it.
           if (isSearchActive) {
-            // Force refetch by briefly clearing and restoring
             const q = activeQuery;
             setActiveQuery("");
             setTimeout(() => setActiveQuery(q), 0);
@@ -274,21 +214,134 @@ const QuotesManagerInner = ({
     setDeleteTarget(Array.from(selectedIds));
   };
 
+  // --- Edit handlers ---
+  const handleStartEdit = (quote: any) => {
+    setEditingQuoteId(quote.id);
+    setEditedFields({
+      text: quote.text,
+      chapter: quote.chapter || "",
+      isPublic: quote.isPublic,
+      tags: quote.tags || [],
+      selectedBook: quote.book
+        ? {
+            title: quote.book.title,
+            authorName: quote.book.authorName || "",
+            coverUrl: quote.book.coverUrl || undefined,
+            bookId: quote.book.id,
+            openlibraryId: undefined,
+          }
+        : null,
+    });
+  };
+
+  const handleCancelEdit = () => {
+    setEditingQuoteId(null);
+    setEditedFields(null);
+  };
+
+  const handleSaveEdit = () => {
+    if (!editingQuoteId || !editedFields) return;
+
+    const originalQuote = displayQuotes.find((q) => q.id === editingQuoteId);
+    if (!originalQuote) return;
+
+    const payload: UpdateQuotePayload = {};
+
+    if (editedFields.text !== originalQuote.text) {
+      payload.text = editedFields.text;
+    }
+    if (editedFields.chapter !== (originalQuote.chapter || "")) {
+      payload.chapter = editedFields.chapter || null;
+    }
+    if (editedFields.isPublic !== originalQuote.isPublic) {
+      payload.isPublic = editedFields.isPublic;
+    }
+    const originalTags = originalQuote.tags || [];
+    if (JSON.stringify(editedFields.tags) !== JSON.stringify(originalTags)) {
+      payload.tags = editedFields.tags.length > 0 ? editedFields.tags : null;
+    }
+
+    if (editedFields.selectedBook) {
+      const newBookId = editedFields.selectedBook.bookId;
+      const newOpenlibraryId = editedFields.selectedBook.openlibraryId;
+
+      console.log("📚 Selected book data:", editedFields.selectedBook);
+      console.log("   - bookId:", newBookId);
+      console.log("   - openlibraryId:", newOpenlibraryId);
+
+      if (newBookId) {
+        payload.bookId = newBookId;
+      } else if (newOpenlibraryId) {
+        payload.openlibraryId = newOpenlibraryId;
+      }
+    }
+
+    console.log("🚀 Final payload to send:", payload);
+
+    if (Object.keys(payload).length === 0) {
+      handleCancelEdit();
+      return;
+    }
+
+    updateMutation.mutate(
+      { userId, quoteId: editingQuoteId, payload },
+      {
+        onSuccess: () => {
+          setQuotes((prev) =>
+            prev.map((q) => {
+              if (q.id !== editingQuoteId) return q;
+
+              const updatedQuote = { ...q };
+
+              if (editedFields) {
+                updatedQuote.text = editedFields.text;
+                updatedQuote.chapter = editedFields.chapter || null;
+                updatedQuote.isPublic = editedFields.isPublic;
+                updatedQuote.tags = editedFields.tags;
+
+                if (editedFields.selectedBook) {
+                  updatedQuote.book = {
+                    title: editedFields.selectedBook.title,
+                    authorName: editedFields.selectedBook.authorName || null,
+                    coverUrl: editedFields.selectedBook.coverUrl,
+                    id: editedFields.selectedBook.bookId,
+                  };
+                  updatedQuote.bookId = editedFields.selectedBook.bookId || "";
+                }
+              }
+
+              return updatedQuote;
+            }),
+          );
+
+          setEditingQuoteId(null);
+          setEditedFields(null);
+          toast({ title: "Quote updated" });
+        },
+        onError: () => {
+          toast({
+            title: "Error",
+            description: "Failed to update quote. Please try again.",
+            variant: "destructive",
+          });
+        },
+      },
+    );
+  };
+
   // --- Determine which quotes to show ---
-  const displayQuotes: QuoteData[] = isSearchActive
+  const displayQuotes = isSearchActive
     ? (searchResults ?? []).filter((q) => !deletedIds.has(q.id))
-    : quotes;
+    : quotes.filter((q) => !deletedIds.has(q.id));
 
   const highlightQuery = isSearchActive ? activeQuery : "";
-
   const adjustedTotal = pagination.totalQuotes - deletedIds.size;
 
   return (
     <div className="flex flex-col gap-4">
       {/* Collection count */}
       <p className="text-foreground-muted -mt-2">
-        {adjustedTotal} quote{adjustedTotal !== 1 ? "s" : ""} in your
-        collection
+        {adjustedTotal} quote{adjustedTotal !== 1 ? "s" : ""} in your collection
       </p>
 
       {/* Search + Actions bar */}
@@ -305,13 +358,7 @@ const QuotesManagerInner = ({
             onChange={(e) => setInputValue(e.target.value)}
             onKeyDown={handleKeyDown}
             placeholder="Search quotes, books, or authors..."
-            className="w-full pl-10 pr-10 py-3 bg-background-elevated border border-border rounded-lg text-foreground placeholder:text-foreground-muted focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-all"
-          />
-          <Loader2
-            size={18}
-            className={`absolute right-3 top-1/2 -translate-y-1/2 text-foreground-muted animate-spin transition-opacity ${
-              isFetching ? "opacity-100" : "opacity-0"
-            }`}
+            className="w-full pl-10 pr-4 py-3 bg-background-elevated border border-border rounded-lg text-foreground placeholder:text-foreground-muted focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-all"
           />
         </div>
         {isSearchActive && (
@@ -381,26 +428,29 @@ const QuotesManagerInner = ({
         <div className="flex items-center gap-2 text-sm text-warning bg-warning/10 border border-warning/30 rounded-lg px-3 py-2">
           <AlertTriangle size={16} className="flex-shrink-0" />
           <span>
-            Showing the maximum of 50 results. Try refining your search for
-            more specific results.
+            Showing the maximum of 50 results. Try refining your search for more
+            specific results.
           </span>
         </div>
       )}
 
       {/* Search result count */}
-      {isSearchActive && !isFetching && searchResults && searchResults.length > 0 && (
-        <p className="text-sm text-foreground-muted">
-          Found{" "}
-          <span className="font-medium text-foreground">
-            {searchResults.filter((q) => !deletedIds.has(q.id)).length}
-          </span>{" "}
-          result
-          {searchResults.filter((q) => !deletedIds.has(q.id)).length !== 1
-            ? "s"
-            : ""}{" "}
-          for &ldquo;{activeQuery}&rdquo;
-        </p>
-      )}
+      {isSearchActive &&
+        !isFetching &&
+        searchResults &&
+        searchResults.length > 0 && (
+          <p className="text-sm text-foreground-muted">
+            Found{" "}
+            <span className="font-medium text-foreground">
+              {searchResults.filter((q) => !deletedIds.has(q.id)).length}
+            </span>{" "}
+            result
+            {searchResults.filter((q) => !deletedIds.has(q.id)).length !== 1
+              ? "s"
+              : ""}{" "}
+            for &ldquo;{activeQuery}&rdquo;
+          </p>
+        )}
 
       {/* Error state (static only) */}
       {!isSearchActive && fetchError && (
@@ -414,71 +464,18 @@ const QuotesManagerInner = ({
         !isFetching &&
         searchResults &&
         searchResults.length === 0 && (
-          <div className="bg-background-elevated border border-background-muted rounded-lg p-12 text-center">
-            <Search
-              size={48}
-              className="mx-auto text-foreground-muted mb-4"
-            />
-            <h2 className="text-xl font-semibold mb-2">No results found</h2>
-            <p className="text-foreground-muted">
-              No quotes match &ldquo;{activeQuery}&rdquo;. Try a different
-              search term.
-            </p>
-          </div>
+          <EmptyState type="no-results" query={activeQuery} />
         )}
 
       {!isSearchActive && !fetchError && quotes.length === 0 && (
-        <div className="bg-background-elevated border border-background-muted rounded-lg p-12 text-center">
-          <BookOpen
-            size={48}
-            className="mx-auto text-foreground-muted mb-4"
-          />
-          <h2 className="text-xl font-semibold mb-2">No quotes yet</h2>
-          <p className="text-foreground-muted mb-6">
-            Start capturing quotes from your favorite books!
-          </p>
-          <a
-            href="/"
-            className="inline-flex items-center gap-2 px-6 py-3 bg-primary text-background font-semibold rounded-lg hover:opacity-90 transition-opacity"
-          >
-            Capture a Quote
-          </a>
-        </div>
+        <EmptyState type="no-quotes" />
       )}
 
       {/* Skeleton loaders while searching */}
       {isSearchActive && isFetching && (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {Array.from({ length: 6 }).map((_, i) => (
-            <div
-              key={i}
-              className="bg-background-elevated border border-background-muted rounded-lg p-6 flex flex-col gap-4"
-            >
-              {/* Quote text skeleton */}
-              <div className="space-y-2">
-                <Skeleton className="h-4 w-full" />
-                <Skeleton className="h-4 w-[90%]" />
-                <Skeleton className="h-4 w-[75%]" />
-              </div>
-
-              {/* Book & author skeleton */}
-              <div className="flex flex-col gap-2 border-t border-background-muted pt-4">
-                <div className="flex items-center gap-2">
-                  <Skeleton className="h-4 w-4 rounded-full" />
-                  <Skeleton className="h-3.5 w-[60%]" />
-                </div>
-                <div className="flex items-center gap-2">
-                  <Skeleton className="h-4 w-4 rounded-full" />
-                  <Skeleton className="h-3.5 w-[40%]" />
-                </div>
-              </div>
-
-              {/* Footer skeleton */}
-              <div className="flex items-center justify-between border-t border-background-muted pt-4">
-                <Skeleton className="h-3.5 w-24" />
-                <Skeleton className="h-8 w-8 rounded-lg" />
-              </div>
-            </div>
+            <QuoteCardSkeleton key={i} />
           ))}
         </div>
       )}
@@ -487,196 +484,29 @@ const QuotesManagerInner = ({
       {!(isSearchActive && isFetching) && displayQuotes.length > 0 && (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {displayQuotes.map((quote) => (
-            <div
+            <QuoteCard
               key={quote.id}
-              onClick={
-                bulkMode ? () => toggleSelection(quote.id) : undefined
-              }
-              className={`bg-background-elevated border rounded-lg p-6 transition-colors flex flex-col gap-4 ${
-                bulkMode
-                  ? "cursor-pointer"
-                  : ""
-              } ${
-                bulkMode && selectedIds.has(quote.id)
-                  ? "border-danger bg-danger/5"
-                  : "border-background-muted hover:border-primary"
-              }`}
-            >
-              {/* Bulk-mode checkbox + Quote Text */}
-              <div className="flex gap-3">
-                {bulkMode && (
-                  <div className="flex-shrink-0 pt-1">
-                    <Checkbox
-                      checked={selectedIds.has(quote.id)}
-                      onCheckedChange={() => toggleSelection(quote.id)}
-                    />
-                  </div>
-                )}
-                <blockquote className="text-foreground leading-relaxed flex-1">
-                  &ldquo;{highlightMatches(quote.text, highlightQuery)}&rdquo;
-                </blockquote>
-              </div>
-
-              {/* Book & Author Info */}
-              <div className="flex flex-col gap-2 text-sm text-foreground-muted border-t border-background-muted pt-4">
-                {quote.book && (
-                  <>
-                    <div className="flex items-center gap-2">
-                      <BookOpen
-                        size={16}
-                        className="text-primary flex-shrink-0"
-                      />
-                      <span className="truncate">
-                        {highlightMatches(
-                          quote.book.title,
-                          highlightQuery,
-                        )}
-                        {quote.chapter ? (
-                          <>
-                            ,{" "}
-                            {highlightMatches(
-                              quote.chapter,
-                              highlightQuery,
-                            )}
-                          </>
-                        ) : (
-                          ""
-                        )}
-                      </span>
-                    </div>
-                    {quote.book.authorName && (
-                      <div className="flex items-center gap-2">
-                        <User
-                          size={16}
-                          className="text-accent flex-shrink-0"
-                        />
-                        <span className="truncate">
-                          {highlightMatches(
-                            quote.book.authorName,
-                            highlightQuery,
-                          )}
-                        </span>
-                      </div>
-                    )}
-                  </>
-                )}
-              </div>
-
-              {/* Footer with Date and Actions */}
-              <div className="flex items-center justify-between mt-auto border-t border-background-muted pt-4">
-                <div className="flex items-center gap-2 text-sm text-foreground-muted">
-                  <Calendar size={14} />
-                  <span>{formatDate(quote.createdAt)}</span>
-                </div>
-
-                {!bulkMode && (
-                  <div className="flex items-center gap-2">
-                    <button
-                      onClick={() => handleDeleteSingle(quote.id)}
-                      className="p-2 text-danger hover:text-danger hover:bg-danger/10 rounded-lg transition-colors"
-                      title="Delete quote"
-                    >
-                      <Trash2 size={16} />
-                    </button>
-                  </div>
-                )}
-              </div>
-
-              {/* Tags */}
-              {quote.tags && quote.tags.length > 0 && (
-                <div className="flex flex-wrap gap-1.5 border-t border-background-muted pt-3">
-                  {quote.tags.map((tag) => (
-                    <span
-                      key={tag}
-                      className="text-[11px] text-foreground-subtle bg-background-muted px-2 py-0.5 rounded-full"
-                    >
-                      #{highlightMatches(tag, highlightQuery)}
-                    </span>
-                  ))}
-                </div>
-              )}
-            </div>
+              quote={quote}
+              highlightQuery={highlightQuery}
+              bulkMode={bulkMode}
+              selectedIds={selectedIds}
+              editingQuoteId={editingQuoteId}
+              editedFields={editedFields}
+              isUpdatePending={updateMutation.isPending}
+              onToggleSelection={toggleSelection}
+              onStartEdit={handleStartEdit}
+              onCancelEdit={handleCancelEdit}
+              onSaveEdit={handleSaveEdit}
+              onSetEditedFields={setEditedFields}
+              onDeleteSingle={handleDeleteSingle}
+            />
           ))}
         </div>
       )}
 
       {/* Pagination (static quotes only) */}
       {!isSearchActive && pagination.totalPages > 1 && (
-        <div className="flex items-center justify-between border-t border-background-muted pt-6">
-          <div className="text-sm text-foreground-muted">
-            Showing{" "}
-            <span className="font-medium text-foreground">
-              {pagination.showingFrom}
-            </span>{" "}
-            to{" "}
-            <span className="font-medium text-foreground">
-              {pagination.showingTo}
-            </span>{" "}
-            of{" "}
-            <span className="font-medium text-foreground">
-              {pagination.totalQuotes}
-            </span>{" "}
-            quotes
-          </div>
-
-          <div className="flex items-center gap-2">
-            {pagination.currentPage > 1 ? (
-              <a
-                href={`/quotes?page=${pagination.currentPage - 1}`}
-                className="p-2 rounded-lg border border-border bg-background-elevated text-foreground hover:bg-background-muted hover:border-primary transition-all"
-                title="Previous page"
-              >
-                <ChevronLeft size={20} />
-              </a>
-            ) : (
-              <span className="p-2 rounded-lg border border-border bg-background-elevated text-foreground opacity-50 cursor-not-allowed">
-                <ChevronLeft size={20} />
-              </span>
-            )}
-
-            <div className="flex items-center gap-1">
-              {pagination.pageNumbers.map((page, i) =>
-                page === "..." ? (
-                  <span
-                    key={`ellipsis-${i}`}
-                    className="min-w-10 h-10 px-3 flex items-center justify-center text-foreground-muted"
-                  >
-                    &hellip;
-                  </span>
-                ) : page === pagination.currentPage ? (
-                  <span
-                    key={page}
-                    className="min-w-10 h-10 px-3 rounded-lg border bg-primary text-background border-primary font-semibold flex items-center justify-center"
-                  >
-                    {page}
-                  </span>
-                ) : (
-                  <a
-                    key={page}
-                    href={`/quotes?page=${page}`}
-                    className="min-w-10 h-10 px-3 rounded-lg border bg-background-elevated border-border text-foreground hover:bg-background-muted hover:border-primary transition-all flex items-center justify-center"
-                  >
-                    {page}
-                  </a>
-                ),
-              )}
-            </div>
-
-            {pagination.currentPage < pagination.totalPages ? (
-              <a
-                href={`/quotes?page=${pagination.currentPage + 1}`}
-                className="p-2 rounded-lg border border-border bg-background-elevated text-foreground hover:bg-background-muted hover:border-primary transition-all"
-                title="Next page"
-              >
-                <ChevronRight size={20} />
-              </a>
-            ) : (
-              <span className="p-2 rounded-lg border border-border bg-background-elevated text-foreground opacity-50 cursor-not-allowed">
-                <ChevronRight size={20} />
-              </span>
-            )}
-          </div>
-        </div>
+        <QuotesPagination pagination={pagination} />
       )}
 
       {/* Delete Confirmation AlertDialog */}
@@ -730,3 +560,5 @@ const QuotesManagerInner = ({
     </div>
   );
 };
+
+export type { QuoteData, PaginationInfo, QuoteBook };
