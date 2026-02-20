@@ -16,6 +16,7 @@ import {
 import { useSearchQuotes } from "@/hooks/use-search-quotes";
 import { useDeleteQuotes } from "@/hooks/use-delete-quotes";
 import { useUpdateQuote, type UpdateQuotePayload } from "@/hooks/use-update-quote";
+import { useFavoriteToggle, MAX_FAVORITES } from "@/hooks/use-favorite-toggle";
 import { QueryProvider } from "./query-provider";
 import {
   AlertDialog,
@@ -124,6 +125,39 @@ const QuotesManagerInner = ({
   useEffect(() => {
     setQuotes(initialQuotes);
   }, [initialQuotes]);
+
+  // --- Favorite toggle state ---
+  const [pendingFavoriteId, setPendingFavoriteId] = useState<string | null>(null);
+  const favoriteCount = quotes.filter((q) => q.isFavorite).length;
+  const canAddFavorite = favoriteCount < MAX_FAVORITES;
+
+  const { mutate: toggleFavorite } = useFavoriteToggle({
+    userId,
+    onSuccess: (isFavorite) => {
+      setPendingFavoriteId(null);
+      setQuotes((prev) =>
+        prev.map((q) =>
+          q.id === pendingFavoriteId ? { ...q, isFavorite } : q
+        )
+      );
+    },
+    onError: () => {
+      setPendingFavoriteId(null);
+    },
+  });
+
+  const handleToggleFavorite = (quoteId: string, newIsFavorite: boolean) => {
+    if (newIsFavorite && !canAddFavorite) {
+      toast({
+        title: "Maximum favorites reached",
+        description: `You can only have ${MAX_FAVORITES} favorite quotes. Remove one first.`,
+        variant: "destructive",
+      });
+      return;
+    }
+    setPendingFavoriteId(quoteId);
+    toggleFavorite({ quoteId, isFavorite: newIsFavorite });
+  };
 
   // --- Search handlers ---
   const handleSearch = () => setActiveQuery(inputValue.trim());
@@ -499,6 +533,9 @@ const QuotesManagerInner = ({
               onSaveEdit={handleSaveEdit}
               onSetEditedFields={setEditedFields}
               onDeleteSingle={handleDeleteSingle}
+              onToggleFavorite={handleToggleFavorite}
+              isTogglingFavorite={pendingFavoriteId === quote.id}
+              canAddFavorite={canAddFavorite}
             />
           ))}
         </div>

@@ -8,6 +8,7 @@ import {
   BookOpen,
   User,
   Calendar,
+  Star,
 } from "lucide-react";
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
@@ -47,6 +48,9 @@ interface QuoteCardProps {
     } | null>
   >;
   onDeleteSingle: (quoteId: string) => void;
+  onToggleFavorite: (quoteId: string, isFavorite: boolean) => void;
+  isTogglingFavorite: boolean;
+  canAddFavorite: boolean;
 }
 
 export function QuoteCard({
@@ -63,8 +67,13 @@ export function QuoteCard({
   onSaveEdit,
   onSetEditedFields,
   onDeleteSingle,
+  onToggleFavorite,
+  isTogglingFavorite,
+  canAddFavorite,
 }: QuoteCardProps) {
   const isEditing = editingQuoteId === quote.id;
+  const isFavorite = quote.isFavorite;
+  const isFavoriteDisabled = !isFavorite && !canAddFavorite;
 
   return (
     <div
@@ -95,7 +104,7 @@ export function QuoteCard({
               onChange={(e) =>
                 onSetEditedFields({ ...editedFields, text: e.target.value })
               }
-              className="min-h-[100px] resize-none text-sm italic leading-relaxed bg-transparent border border-border rounded-lg p-3 focus-visible:ring-2 focus-visible:ring-primary"
+              className="min-h-[100px] focus:min-h-[250px] transition-all duration-300 resize-none text-sm italic leading-relaxed bg-transparent border border-border rounded-lg p-3 focus-visible:ring-2 focus-visible:ring-primary"
               placeholder="Quote text..."
             />
 
@@ -231,6 +240,33 @@ export function QuoteCard({
 
           {!bulkMode && (
             <div className="flex items-center gap-2">
+              {/* Favorite toggle - Star icon */}
+              <button
+                onClick={() => onToggleFavorite(quote.id, !isFavorite)}
+                disabled={isTogglingFavorite}
+                className={`p-2 rounded-lg transition-colors ${
+                  isFavoriteDisabled
+                    ? "opacity-30 cursor-not-allowed"
+                    : "text-foreground-muted hover:text-warning hover:bg-warning/10"
+                }`}
+                title={
+                  isFavorite
+                    ? "Remove from favorites"
+                    : isFavoriteDisabled
+                    ? "Maximum favorites reached"
+                    : "Add to favorites"
+                }
+              >
+                {isTogglingFavorite ? (
+                  <Loader2 size={16} className="animate-spin" />
+                ) : (
+                  <Star
+                    size={16}
+                    fill={isFavorite ? "currentColor" : "none"}
+                    className={isFavorite ? "text-warning" : ""}
+                  />
+                )}
+              </button>
               <button
                 onClick={() => onStartEdit(quote)}
                 className="p-2 text-foreground-muted hover:text-primary hover:bg-primary/10 rounded-lg transition-colors"
