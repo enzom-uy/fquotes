@@ -16,29 +16,38 @@ import { BookSearch, type BookResult } from "./book-search";
 import { Dialog, DialogContent, DialogTrigger } from "./ui/dialog";
 import { useToast } from "@/hooks/use-toast";
 import { useSession } from "@/lib/auth-client";
+import { QuoteSkeletons } from "./quote-skeleton";
+import { useSaveQuotes, buildQuotePayloads } from "@/hooks/use-save-quotes";
+import { QueryProvider } from "./query-provider";
 
 interface CapturedImage {
   id: string;
   data: string;
 }
 
-const BACKEND_URL =
-  import.meta.env.PUBLIC_BACKEND_URL || "http://localhost:5000/api";
-
 export const CaptureImage = () => {
+  return (
+    <QueryProvider>
+      <CaptureImageInner />
+    </QueryProvider>
+  );
+};
+
+const CaptureImageInner = () => {
   const [capturedImages, setCapturedImages] = useState<CapturedImage[]>([]);
   const [isProcessing, setIsProcessing] = useState(false);
-  const [isSaving, setIsSaving] = useState(false);
   const [processingProgress, setProcessingProgress] = useState({
     current: 0,
     total: 0,
   });
   const [quotesMetadata, setQuotesMetadata] = useState<QuoteMetadata[]>([]);
   const [selectedBooks, setSelectedBooks] = useState<(BookResult | null)[]>([]);
+  const [bookErrors, setBookErrors] = useState<(string | null)[]>([]);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const cameraInputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
   const { data: session } = useSession();
+  const saveQuotesMutation = useSaveQuotes();
 
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
@@ -69,29 +78,23 @@ export const CaptureImage = () => {
     const imageCount = capturedImages.length;
 
     try {
+      let allTexts: string[];
+
       if (imageCount <= 4) {
         const worker = await createWorker("eng");
+        const texts: string[] = [];
 
         for (let i = 0; i < capturedImages.length; i++) {
+          const ret = await worker.recognize(capturedImages[i].data);
+          texts.push(ret.data.text);
           setProcessingProgress({
             current: i + 1,
             total: capturedImages.length,
           });
-          const ret = await worker.recognize(capturedImages[i].data);
-          console.log(`Image ${i + 1} text:`, ret.data.text);
-          setQuotesMetadata((prev) => [
-            ...prev,
-            {
-              text: ret.data.text,
-              chapter: "",
-              isPublic: false,
-              isFavorite: false,
-              tags: [],
-            },
-          ]);
         }
 
         await worker.terminate();
+        allTexts = texts;
       } else {
         const scheduler = createScheduler();
         const workerN = Math.min(4, imageCount); // Max 4 workers
@@ -108,31 +111,30 @@ export const CaptureImage = () => {
         await Promise.all(workerPromises);
 
         let completedCount = 0;
-        const results = await Promise.all(
-          capturedImages.map(async (image, index) => {
+        allTexts = await Promise.all(
+          capturedImages.map(async (image) => {
             const result = await scheduler.addJob("recognize", image.data);
             completedCount++;
             setProcessingProgress({
               current: completedCount,
               total: capturedImages.length,
             });
-            console.log(`Image ${index + 1} text:`, result.data.text);
             return result.data.text;
           }),
         );
 
-        setQuotesMetadata(
-          results.map((text) => ({
-            text,
-            chapter: "",
-            isPublic: false,
-            isFavorite: false,
-            tags: [],
-          })),
-        );
         await scheduler.terminate();
       }
 
+      // Set all quotes at once when processing is complete
+      setQuotesMetadata(
+        allTexts.map((text) => ({
+          text,
+          chapter: "",
+          isPublic: false,
+          tags: [],
+        })),
+      );
       setIsProcessing(false);
 
       // Show success toast
@@ -164,6 +166,7 @@ export const CaptureImage = () => {
     setCapturedImages([]);
     setQuotesMetadata([]);
     setSelectedBooks([]);
+    setBookErrors([]);
     if (fileInputRef.current) fileInputRef.current.value = "";
     if (cameraInputRef.current) cameraInputRef.current.value = "";
   };
@@ -195,85 +198,48 @@ export const CaptureImage = () => {
       return;
     }
 
-    setIsSaving(true);
-
-    try {
-      // Group quotes by their selected book
-      // Build a map: bookKey -> { bookData, quoteIndices }
-      const bookGroups = new Map<
-        string,
-        { book: BookResult | null; indices: number[] }
-      >();
-
-      quotesMetadata.forEach((_, index) => {
-        const book = selectedBooks[index] ?? null;
-        const key = book
-          ? `${book.bookId ?? ""}-${book.openlibraryId ?? ""}-${book.title}`
-          : "__no_book__";
-
-        if (!bookGroups.has(key)) {
-          bookGroups.set(key, { book, indices: [] });
-        }
-        bookGroups.get(key)!.indices.push(index);
-      });
-
-      // Send one request per book group
-      const requests = Array.from(bookGroups.values()).map(
-        ({ book, indices }) => {
-          const payload = {
-            userId: session.user.id,
-            ...(book?.bookId && { bookId: book.bookId }),
-            ...(book?.openlibraryId && { openlibraryId: book.openlibraryId }),
-            quotes: indices.map((i) => {
-              const q = quotesMetadata[i];
-              return {
-                text: q.text.trim(),
-                ...(q.chapter && { chapter: q.chapter }),
-                isPublic: q.isPublic,
-                isFavorite: q.isFavorite,
-                ...(q.tags.length > 0 && { tags: q.tags }),
-              };
-            }),
-          };
-
-          return fetch(`${BACKEND_URL}/quotes`, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            credentials: "include",
-            body: JSON.stringify(payload),
-          });
-        },
-      );
-
-      const responses = await Promise.all(requests);
-      const failedResponses = responses.filter((r) => !r.ok);
-
-      if (failedResponses.length > 0) {
-        throw new Error(`${failedResponses.length} request(s) failed`);
-      }
-
+    // Validate that all quotes have a book selected
+    const newBookErrors = quotesMetadata.map((_, index) =>
+      selectedBooks[index] ? null : "Please select a book for this quote.",
+    );
+    if (newBookErrors.some((e) => e !== null)) {
+      setBookErrors(newBookErrors);
       toast({
-        title: "Quotes saved!",
-        description: `Successfully saved ${quotesMetadata.length} quote${quotesMetadata.length !== 1 ? "s" : ""}.`,
-        variant: "success",
-      });
-
-      handleClearAll();
-    } catch (error) {
-      console.error("Error saving quotes:", error);
-      toast({
-        title: "Failed to save",
-        description: `Error saving quotes: ${error}`,
+        title: "Missing book selection",
+        description: "Please select a book for each quote before saving.",
         variant: "destructive",
       });
-    } finally {
-      setIsSaving(false);
+      return;
     }
+
+    const payloads = buildQuotePayloads(
+      quotesMetadata,
+      selectedBooks,
+      session.user.id,
+    );
+
+    saveQuotesMutation.mutate(payloads, {
+      onSuccess: () => {
+        toast({
+          title: "Quotes saved!",
+          description: `Successfully saved ${quotesMetadata.length} quote${quotesMetadata.length !== 1 ? "s" : ""}.`,
+          variant: "success",
+        });
+        handleClearAll();
+      },
+      onError: (error) => {
+        toast({
+          title: "Failed to save",
+          description: `Error saving quotes: ${error.message}`,
+          variant: "destructive",
+        });
+      },
+    });
   };
 
   if (capturedImages.length > 0) {
     return (
-      <>
+      <div>
         {/* Hidden file inputs - always in DOM */}
         <input
           ref={fileInputRef}
@@ -380,10 +346,10 @@ export const CaptureImage = () => {
               <>
                 <Button
                   onClick={handleSaveQuotes}
-                  disabled={isSaving}
+                  disabled={saveQuotesMutation.isPending}
                   className="flex items-center justify-center gap-2 bg-gradient-to-r from-primary to-accent text-background font-semibold hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  {isSaving ? (
+                  {saveQuotesMutation.isPending ? (
                     <>
                       <Loader2 size={20} className="animate-spin" />
                       Saving...
@@ -397,7 +363,7 @@ export const CaptureImage = () => {
                 </Button>
                 <Button
                   onClick={handleClearAll}
-                  disabled={isSaving}
+                  disabled={saveQuotesMutation.isPending}
                   className="flex items-center justify-center gap-2 bg-danger text-background font-semibold hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   <X size={20} />
@@ -407,7 +373,15 @@ export const CaptureImage = () => {
             )}
           </div>
 
-          {/* After processing: Images with book search and extracted text */}
+          {/* Skeletons while processing */}
+          {isProcessing && quotesMetadata.length === 0 && (
+            <QuoteSkeletons
+              count={capturedImages.length}
+              processed={processingProgress.current}
+            />
+          )}
+
+          {/* After processing: Images with book search and styled quote cards */}
           {quotesMetadata.length > 0 && (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               {quotesMetadata.map((quoteData, index) => (
@@ -415,11 +389,11 @@ export const CaptureImage = () => {
                   {/* Image preview with Dialog */}
                   <Dialog>
                     <DialogTrigger asChild>
-                      <button className="relative bg-background-elevated border border-background-muted rounded-lg overflow-hidden hover:border-primary transition-colors cursor-pointer group">
+                      <button className="relative bg-background-elevated border border-background-muted rounded-lg overflow-hidden hover:border-primary transition-colors cursor-pointer group max-h-48">
                         <img
                           src={capturedImages[index]?.data}
                           alt={`Quote ${index + 1}`}
-                          className="w-full h-auto object-contain"
+                          className="w-full h-full object-cover"
                         />
                         <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors flex items-center justify-center">
                           <span className="text-white opacity-0 group-hover:opacity-100 transition-opacity text-sm font-medium bg-black/50 px-3 py-1.5 rounded-lg">
@@ -438,13 +412,18 @@ export const CaptureImage = () => {
                   </Dialog>
                   {/* Book search per quote */}
                   <BookSearch
-                    onSelect={(book) =>
+                    onSelect={(book) => {
                       setSelectedBooks((prev) => {
                         const updated = [...prev];
                         updated[index] = book;
                         return updated;
-                      })
-                    }
+                      });
+                      setBookErrors((prev) => {
+                        const updated = [...prev];
+                        updated[index] = null;
+                        return updated;
+                      });
+                    }}
                     onClear={() =>
                       setSelectedBooks((prev) => {
                         const updated = [...prev];
@@ -453,12 +432,14 @@ export const CaptureImage = () => {
                       })
                     }
                     selectedBook={selectedBooks[index] ?? null}
+                    error={bookErrors[index] ?? undefined}
                   />
-                  {/* Editable quote card */}
+                  {/* Editable quote card — styled to preview the final result */}
                   <EditableQuoteCard
                     metadata={quoteData}
                     index={index}
                     onUpdate={handleUpdateQuote}
+                    selectedBook={selectedBooks[index] ?? null}
                   />
                 </div>
               ))}
@@ -477,15 +458,16 @@ export const CaptureImage = () => {
             </div>
           )}
         </div>
-      </>
+      </div>
     );
   }
 
   return (
-    <>
+    <div>
       {/* Hidden file inputs - always in DOM */}
       <input
         ref={fileInputRef}
+        id="file-upload"
         type="file"
         accept="image/*"
         multiple
@@ -494,6 +476,7 @@ export const CaptureImage = () => {
       />
       <input
         ref={cameraInputRef}
+        id="camera-capture"
         type="file"
         accept="image/*"
         capture="environment"
@@ -514,8 +497,8 @@ export const CaptureImage = () => {
         {/* Upload Options */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-8">
           {/* Camera Option */}
-          <button
-            onClick={() => cameraInputRef.current?.click()}
+          <label
+            htmlFor="camera-capture"
             className="relative bg-background-elevated border-2 border-border rounded-2xl p-8 cursor-pointer transition-all hover:border-primary hover:scale-[1.02] flex flex-col items-center gap-4"
           >
             <div className="w-16 h-16 bg-background-muted rounded-full flex items-center justify-center">
@@ -527,11 +510,11 @@ export const CaptureImage = () => {
                 Take photos directly
               </p>
             </div>
-          </button>
+          </label>
 
           {/* Upload Option */}
-          <button
-            onClick={() => fileInputRef.current?.click()}
+          <label
+            htmlFor="file-upload"
             className="relative bg-background-elevated border-2 border-border rounded-2xl p-8 cursor-pointer transition-all hover:border-accent hover:scale-[1.02] flex flex-col items-center gap-4"
           >
             <div className="w-16 h-16 bg-background-muted rounded-full flex items-center justify-center">
@@ -543,7 +526,7 @@ export const CaptureImage = () => {
                 Choose from gallery
               </p>
             </div>
-          </button>
+          </label>
         </div>
 
         {/* Tips */}
@@ -571,6 +554,6 @@ export const CaptureImage = () => {
           </ul>
         </div>
       </div>
-    </>
+    </div>
   );
 };

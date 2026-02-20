@@ -8,7 +8,11 @@ interface NavbarMenuProps {
   userImage?: string | null;
 }
 
-export const NavbarMenu = ({ currentPath, userName, userImage }: NavbarMenuProps) => {
+export const NavbarMenu = ({
+  currentPath,
+  userName,
+  userImage,
+}: NavbarMenuProps) => {
   const [isOpen, setIsOpen] = useState(false);
   const [isSigningOut, setIsSigningOut] = useState(false);
 
@@ -83,7 +87,7 @@ export const NavbarMenu = ({ currentPath, userName, userImage }: NavbarMenuProps
               </a>
             );
           })}
-          
+
           {/* Profile Link in Mobile */}
           <a
             href="/profile"
@@ -102,6 +106,7 @@ export const NavbarMenu = ({ currentPath, userName, userImage }: NavbarMenuProps
                 src={userImage}
                 alt={userName || "User"}
                 className="w-5 h-5 rounded-full object-cover"
+                referrerPolicy="no-referrer"
               />
             ) : (
               <User size={20} />

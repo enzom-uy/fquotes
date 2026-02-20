@@ -1,82 +1,79 @@
 ---
 import Layout from '@/layouts/layout.astro';
-import { BookOpen, User, Calendar, Trash2, Search, ChevronLeft, ChevronRight } from 'lucide-react';
+import { QuotesManager, type QuoteData } from '@/components/quotes-manager';
 
 export const prerender = false;
 
 const user = Astro.locals.user;
 const session = Astro.locals.session;
 
-// Redirect to home if not authenticated
 if (!session) {
   return Astro.redirect('/');
 }
 
-// Dummy pagination data
-const currentPage: number = 1;
-const totalPages: number = 5;
-const totalQuotes: number = 28;
+const PER_PAGE = 10;
+const currentPage = Math.max(1, Number(Astro.url.searchParams.get('page')) || 1);
 
-// Dummy data for quotes
-const dummyQuotes = [
-  {
-    id: '1',
-    text: 'It is a truth universally acknowledged, that a single man in possession of a good fortune, must be in want of a wife.',
-    book: 'Pride and Prejudice',
-    author: 'Jane Austen',
-    chapter: 'Chapter 1',
-    createdAt: '2024-01-15',
-  },
-  {
-    id: '2',
-    text: 'All happy families are alike; each unhappy family is unhappy in its own way.',
-    book: 'Anna Karenina',
-    author: 'Leo Tolstoy',
-    chapter: 'Part 1',
-    createdAt: '2024-01-20',
-  },
-  {
-    id: '3',
-    text: 'It was the best of times, it was the worst of times, it was the age of wisdom, it was the age of foolishness.',
-    book: 'A Tale of Two Cities',
-    author: 'Charles Dickens',
-    chapter: 'Book 1, Chapter 1',
-    createdAt: '2024-01-25',
-  },
-  {
-    id: '4',
-    text: 'Call me Ishmael. Some years ago—never mind how long precisely—having little or no money in my purse, and nothing particular to interest me on shore, I thought I would sail about a little and see the watery part of the world.',
-    book: 'Moby-Dick',
-    author: 'Herman Melville',
-    chapter: 'Chapter 1',
-    createdAt: '2024-02-01',
-  },
-  {
-    id: '5',
-    text: 'In my younger and more vulnerable years my father gave me some advice that I\'ve been turning over in my mind ever since.',
-    book: 'The Great Gatsby',
-    author: 'F. Scott Fitzgerald',
-    chapter: 'Chapter 1',
-    createdAt: '2024-02-02',
-  },
-  {
-    id: '6',
-    text: 'Whether I shall turn out to be the hero of my own life, or whether that station will be held by anybody else, these pages must show.',
-    book: 'David Copperfield',
-    author: 'Charles Dickens',
-    chapter: 'Chapter 1',
-    createdAt: '2024-02-02',
-  },
-];
+const BACKEND_URL = import.meta.env.PUBLIC_BACKEND_URL || 'http://localhost:5000/api';
 
-const formatDate = (dateString: string) => {
-  const date = new Date(dateString);
-  return date.toLocaleDateString('en-US', {
-    month: 'short',
-    day: 'numeric',
-    year: 'numeric',
-  });
+interface PaginatedResponse {
+  data: QuoteData[];
+  count: number;
+  page: number;
+  perPage: number;
+}
+
+let quotes: QuoteData[] = [];
+let totalQuotes = 0;
+let fetchError = '';
+
+try {
+  const response = await fetch(
+    `${BACKEND_URL}/quotes/${user!.id}?perPage=${PER_PAGE}&page=${currentPage - 1}`,
+    {
+      headers: {
+        cookie: Astro.request.headers.get('cookie') || '',
+      },
+    }
+  );
+
+  if (!response.ok) {
+    throw new Error(`Backend returned ${response.status}`);
+  }
+
+  const result: PaginatedResponse = await response.json();
+  quotes = result.data;
+  totalQuotes = result.count;
+} catch (error) {
+  console.error('Error fetching quotes:', error);
+  fetchError = 'Failed to load quotes. Please try again later.';
+}
+
+const totalPages = Math.max(1, Math.ceil(totalQuotes / PER_PAGE));
+const showingFrom = totalQuotes === 0 ? 0 : (currentPage - 1) * PER_PAGE + 1;
+const showingTo = Math.min(currentPage * PER_PAGE, totalQuotes);
+
+const getPageNumbers = (): (number | '...')[] => {
+  if (totalPages <= 7) return Array.from({ length: totalPages }, (_, i) => i + 1);
+
+  const pages: (number | '...')[] = [1];
+
+  if (currentPage > 3) pages.push('...');
+
+  const start = Math.max(2, currentPage - 1);
+  const end = Math.min(totalPages - 1, currentPage + 1);
+
+  for (let i = start; i <= end; i++) {
+    pages.push(i);
+  }
+
+  if (currentPage < totalPages - 2) pages.push('...');
+
+  pages.push(totalPages);
+  return pages;
 };
+
+const pageNumbers = getPageNumbers();
 ---
 
 <Layout title="My Quotes - QuoteKeeper">
@@ -86,114 +83,23 @@ const formatDate = (dateString: string) => {
       <div class="flex flex-col gap-4">
         <div>
           <h1 class="text-3xl font-bold">My Quotes</h1>
-          <p class="text-foreground-muted mt-1">
-            {totalQuotes} quotes in your collection
-          </p>
         </div>
 
-        <!-- Search Bar -->
-        <div class="relative">
-          <Search size={20} className="absolute left-3 top-1/2 -translate-y-1/2 text-foreground-muted" />
-          <input
-            type="text"
-            placeholder="Search quotes, books, or authors..."
-            class="w-full pl-10 pr-4 py-3 bg-background-elevated border border-border rounded-lg text-foreground placeholder:text-foreground-muted focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-all"
-          />
-        </div>
-      </div>
-
-      <!-- Quotes Grid -->
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-        {dummyQuotes.map((quote) => (
-          <div
-            class="bg-background-elevated border border-background-muted rounded-lg p-6 hover:border-primary transition-colors flex flex-col gap-4"
-          >
-            <!-- Quote Text -->
-            <blockquote class="text-foreground leading-relaxed">
-              "{quote.text}"
-            </blockquote>
-
-            <!-- Book & Author Info -->
-            <div class="flex flex-col gap-2 text-sm text-foreground-muted border-t border-background-muted pt-4">
-              <div class="flex items-center gap-2">
-                <BookOpen size={16} className="text-primary" />
-                <span>{quote.book}</span>
-              </div>
-              <div class="flex items-center gap-2">
-                <User size={16} className="text-accent" />
-                <span>{quote.author}</span>
-              </div>
-              {quote.chapter && (
-                <div class="flex items-center gap-2">
-                  <span class="text-foreground-muted">
-                    {quote.chapter}
-                  </span>
-                </div>
-              )}
-            </div>
-
-            <!-- Footer with Date and Actions -->
-            <div class="flex items-center justify-between mt-auto border-t border-background-muted pt-4">
-              <div class="flex items-center gap-2 text-sm text-foreground-muted">
-                <Calendar size={14} />
-                <span>{formatDate(quote.createdAt)}</span>
-              </div>
-
-              <div class="flex items-center gap-2">
-                <button
-                  class="p-2 text-danger hover:text-danger hover:bg-danger/10 rounded-lg transition-colors"
-                  title="Delete quote"
-                >
-                  <Trash2 size={16} />
-                </button>
-              </div>
-            </div>
-          </div>
-        ))}
-      </div>
-
-      <!-- Pagination -->
-      <div class="flex items-center justify-between border-t border-background-muted pt-6">
-        <!-- Page Info -->
-        <div class="text-sm text-foreground-muted">
-          Showing <span class="font-medium text-foreground">{(currentPage - 1) * 6 + 1}</span> to <span class="font-medium text-foreground">{Math.min(currentPage * 6, totalQuotes)}</span> of <span class="font-medium text-foreground">{totalQuotes}</span> quotes
-        </div>
-
-        <!-- Pagination Controls -->
-        <div class="flex items-center gap-2">
-          <!-- Previous Button -->
-          <button
-            disabled={currentPage === 1}
-            class="p-2 rounded-lg border border-border bg-background-elevated text-foreground hover:bg-background-muted hover:border-primary transition-all disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-background-elevated disabled:hover:border-border"
-            title="Previous page"
-          >
-            <ChevronLeft size={20} />
-          </button>
-
-          <!-- Page Numbers -->
-          <div class="flex items-center gap-1">
-            {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
-              <button
-                class={`min-w-10 h-10 px-3 rounded-lg border transition-all ${
-                  page === currentPage
-                    ? 'bg-primary text-background border-primary font-semibold'
-                    : 'bg-background-elevated border-border text-foreground hover:bg-background-muted hover:border-primary'
-                }`}
-              >
-                {page}
-              </button>
-            ))}
-          </div>
-
-          <!-- Next Button -->
-          <button
-            disabled={currentPage === totalPages}
-            class="p-2 rounded-lg border border-border bg-background-elevated text-foreground hover:bg-background-muted hover:border-primary transition-all disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-background-elevated disabled:hover:border-border"
-            title="Next page"
-          >
-            <ChevronRight size={20} />
-          </button>
-        </div>
+        <!-- QuotesManager: search, grid, pagination, delete all in one React island -->
+        <QuotesManager
+          client:load
+          userId={user!.id}
+          quotes={quotes}
+          pagination={{
+            currentPage,
+            totalPages,
+            totalQuotes,
+            showingFrom,
+            showingTo,
+            pageNumbers,
+          }}
+          fetchError={fetchError}
+        />
       </div>
     </div>
   </main>

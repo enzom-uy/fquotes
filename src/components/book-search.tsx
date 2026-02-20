@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Search, Book, Loader2, Check, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import {
@@ -10,24 +10,17 @@ import {
 } from "./ui/command";
 import { Popover, PopoverContent, PopoverTrigger } from "./ui/popover";
 import { Input } from "./ui/input";
+import { useBookSearch, type BookResult } from "@/hooks/use-book-search";
 
-export interface BookResult {
-  title: string;
-  author_name: string;
-  bookId?: string;
-  openlibraryId?: string;
-  coverUrl?: string;
-}
+export type { BookResult };
 
 interface BookSearchProps {
   onSelect: (book: BookResult) => void;
   onClear?: () => void;
   selectedBook: BookResult | null;
+  error?: string;
   className?: string;
 }
-
-const BACKEND_URL =
-  import.meta.env.PUBLIC_BACKEND_URL || "http://localhost:5000/api";
 
 function useDebounce<T>(value: T, delay: number): T {
   const [debouncedValue, setDebouncedValue] = useState(value);
@@ -44,52 +37,19 @@ export const BookSearch = ({
   onSelect,
   onClear,
   selectedBook,
+  error,
   className,
 }: BookSearchProps) => {
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState("");
-  const [results, setResults] = useState<BookResult[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
 
   const debouncedQuery = useDebounce(query, 400);
-
-  const searchBooks = useCallback(async (searchQuery: string) => {
-    if (searchQuery.trim().length < 2) {
-      setResults([]);
-      return;
-    }
-
-    setIsLoading(true);
-    try {
-      const response = await fetch(
-        `${BACKEND_URL}/book/search?query=${encodeURIComponent(searchQuery)}`,
-        { credentials: "include" },
-      );
-
-      if (!response.ok) {
-        throw new Error("Search failed");
-      }
-
-      const data: BookResult[] = await response.json();
-      console.log(data);
-      setResults(data);
-    } catch (error) {
-      console.error("Error searching books:", error);
-      setResults([]);
-    } finally {
-      setIsLoading(false);
-    }
-  }, []);
-
-  useEffect(() => {
-    searchBooks(debouncedQuery);
-  }, [debouncedQuery, searchBooks]);
+  const { data: results = [], isFetching } = useBookSearch(debouncedQuery);
 
   const handleSelect = (book: BookResult) => {
     onSelect(book);
     setQuery("");
-    setResults([]);
     setOpen(false);
   };
 
@@ -129,7 +89,7 @@ export const BookSearch = ({
               {selectedBook.title}
             </span>
             <span className="truncate text-xs text-foreground-muted leading-tight">
-              {selectedBook.author_name}
+              {selectedBook.authorName}
             </span>
           </div>
           <button
@@ -153,9 +113,9 @@ export const BookSearch = ({
               onChange={handleInputChange}
               onFocus={handleInputFocus}
               placeholder={selectedBook ? "Search for a different book..." : "Search for a book..."}
-              className="pl-9 pr-9"
+              className={cn("pl-9 pr-9", error && "border-danger focus-visible:ring-danger")}
             />
-            {isLoading && (
+            {isFetching && (
               <Loader2 className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 animate-spin text-foreground-muted" />
             )}
           </div>
@@ -169,18 +129,18 @@ export const BookSearch = ({
           <Command shouldFilter={false}>
             <CommandList>
               {results.length === 0 &&
-                !isLoading &&
+                !isFetching &&
                 query.trim().length >= 2 && (
                   <CommandEmpty>No books found.</CommandEmpty>
                 )}
               {results.length === 0 &&
-                !isLoading &&
+                !isFetching &&
                 query.trim().length < 2 && (
                   <CommandEmpty>
                     Type at least 2 characters to search.
                   </CommandEmpty>
                 )}
-              {isLoading && (
+              {isFetching && results.length === 0 && (
                 <div className="flex items-center justify-center gap-2 py-6 text-sm text-foreground-muted">
                   <Loader2 className="h-4 w-4 animate-spin" />
                   Searching...
@@ -191,11 +151,12 @@ export const BookSearch = ({
                   {results.map((book, index) => {
                     const isSelected =
                       selectedBook?.title === book.title &&
-                      selectedBook?.author_name === book.author_name;
+                      selectedBook?.authorName === book.authorName;
 
                     return (
                       <CommandItem
-                        key={`${book.title}-${book.author_name}-${index}`}
+                        key={`${book.title}-${book.authorName}-${index}`}
+                        value={`${book.title}-${book.authorName}-${index}`}
                         onSelect={() => handleSelect(book)}
                         className="flex items-start gap-3 py-3 px-3 cursor-pointer"
                       >
@@ -211,7 +172,7 @@ export const BookSearch = ({
                             {book.title}
                           </span>
                           <span className="text-xs text-foreground-muted truncate">
-                            {book.author_name}
+                            {book.authorName}
                           </span>
                         </div>
                         {isSelected && (
@@ -226,6 +187,10 @@ export const BookSearch = ({
           </Command>
         </PopoverContent>
       </Popover>
+
+      {error && (
+        <p className="mt-1 text-sm text-danger">{error}</p>
+      )}
     </div>
   );
 };

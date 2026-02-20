@@ -14,6 +14,9 @@ import {
   FormMessage,
   FormDescription,
 } from "./ui/form";
+import { useUpdateProfile } from "@/hooks/use-update-profile";
+import { ApiError } from "@/lib/api";
+import { QueryProvider } from "./query-provider";
 
 const profileFormSchema = z.object({
   image: z.string().optional(),
@@ -33,8 +36,16 @@ interface Props {
 }
 
 export const CreateProfileForm = ({ email, name, profilePic }: Props) => {
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  return (
+    <QueryProvider>
+      <CreateProfileFormInner email={email} name={name} profilePic={profilePic} />
+    </QueryProvider>
+  );
+};
+
+const CreateProfileFormInner = ({ email, name, profilePic }: Props) => {
   const [error, setError] = useState<string | null>(null);
+  const updateProfile = useUpdateProfile();
 
   const form = useForm<ProfileFormValues>({
     resolver: zodResolver(profileFormSchema),
@@ -45,32 +56,21 @@ export const CreateProfileForm = ({ email, name, profilePic }: Props) => {
     },
   });
 
-  const onSubmit = async (data: ProfileFormValues) => {
-    setIsSubmitting(true);
+  const onSubmit = (data: ProfileFormValues) => {
     setError(null);
 
-    try {
-      const response = await fetch("http://localhost:5000/api/user/profile", {
-        method: "PATCH",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        credentials: "include",
-        body: JSON.stringify(data),
-      });
-
-      if (response.status === 201) {
+    updateProfile.mutate(data, {
+      onSuccess: () => {
         window.location.href = "/profile";
-      } else {
-        const errorData = await response.json();
-        setError(errorData.message || "Failed to create profile");
-      }
-    } catch (err) {
-      setError("Network error. Please try again.");
-      console.error("Error creating profile:", err);
-    } finally {
-      setIsSubmitting(false);
-    }
+      },
+      onError: (err) => {
+        if (err instanceof ApiError) {
+          setError(err.message || "Failed to create profile");
+        } else {
+          setError("Network error. Please try again.");
+        }
+      },
+    });
   };
 
   return (
@@ -92,7 +92,7 @@ export const CreateProfileForm = ({ email, name, profilePic }: Props) => {
             <FormItem>
               <FormLabel>Profile Picture</FormLabel>
               <FormControl>
-                <FileUpload value={field.value} disabled={isSubmitting} />
+                <FileUpload value={field.value} disabled={updateProfile.isPending} />
               </FormControl>
               <FormDescription>
                 Upload a profile picture (this is a placeholder for now)
@@ -129,7 +129,7 @@ export const CreateProfileForm = ({ email, name, profilePic }: Props) => {
                 <Input
                   {...field}
                   placeholder="Enter your name"
-                  disabled={isSubmitting}
+                  disabled={updateProfile.isPending}
                 />
               </FormControl>
               <FormDescription>This will be your display name</FormDescription>
@@ -142,9 +142,9 @@ export const CreateProfileForm = ({ email, name, profilePic }: Props) => {
           type="submit"
           className="w-full"
           size="lg"
-          disabled={isSubmitting}
+          disabled={updateProfile.isPending}
         >
-          {isSubmitting ? "Creating Profile..." : "Create Profile"}
+          {updateProfile.isPending ? "Creating Profile..." : "Create Profile"}
         </Button>
       </form>
     </Form>
