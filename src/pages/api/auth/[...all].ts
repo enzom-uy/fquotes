@@ -1,3 +1,5 @@
+export const prerender = false;
+
 import { auth } from "@/lib/auth";
 import { APIRoute } from "astro";
 
