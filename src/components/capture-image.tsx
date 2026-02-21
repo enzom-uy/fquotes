@@ -1,4 +1,4 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import {
   Camera,
   Upload,
@@ -8,8 +8,17 @@ import {
   Plus,
   Save,
   Loader2,
+  Crop,
+  Globe,
 } from "lucide-react";
 import { Button } from "./ui/button";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { createWorker, createScheduler } from "tesseract.js";
 import { EditableQuoteCard, type QuoteMetadata } from "./editable-quote-card";
 import { BookSearch, type BookResult } from "./book-search";
@@ -19,11 +28,44 @@ import { useSession } from "@/lib/auth-client";
 import { QuoteSkeletons } from "./quote-skeleton";
 import { useSaveQuotes, buildQuotePayloads } from "@/hooks/use-save-quotes";
 import { QueryProvider } from "./query-provider";
+import { ImageCropper } from "./image-cropper";
 
 interface CapturedImage {
   id: string;
-  data: string;
+  originalData: string;
+  croppedData: string | null;
 }
+
+const OCR_LANGUAGES = [
+  { code: "ara", name: "Arabic" },
+  { code: "ces", name: "Czech" },
+  { code: "chi_sim", name: "Chinese (Simplified)" },
+  { code: "dan", name: "Danish" },
+  { code: "deu", name: "German" },
+  { code: "ell", name: "Greek" },
+  { code: "eng", name: "English" },
+  { code: "fin", name: "Finnish" },
+  { code: "fra", name: "French" },
+  { code: "heb", name: "Hebrew" },
+  { code: "hin", name: "Hindi" },
+  { code: "hun", name: "Hungarian" },
+  { code: "ita", name: "Italian" },
+  { code: "jpn", name: "Japanese" },
+  { code: "kor", name: "Korean" },
+  { code: "nld", name: "Dutch" },
+  { code: "nor", name: "Norwegian" },
+  { code: "pol", name: "Polish" },
+  { code: "por", name: "Portuguese" },
+  { code: "rus", name: "Russian" },
+  { code: "spa", name: "Spanish" },
+  { code: "swe", name: "Swedish" },
+  { code: "tha", name: "Thai" },
+  { code: "tur", name: "Turkish" },
+  { code: "ukr", name: "Ukrainian" },
+  { code: "vie", name: "Vietnamese" },
+];
+
+const STORAGE_KEY = "fquotes-ocr-language";
 
 export const CaptureImage = () => {
   return (
@@ -49,6 +91,18 @@ const CaptureImageInner = () => {
   const { data: session } = useSession();
   const saveQuotesMutation = useSaveQuotes();
 
+  const [croppingImageId, setCroppingImageId] = useState<string | null>(null);
+  const [ocrLanguage, setOcrLanguage] = useState<string>(() => {
+    if (typeof window !== "undefined") {
+      return localStorage.getItem(STORAGE_KEY) || "spa";
+    }
+    return "spa";
+  });
+
+  useEffect(() => {
+    localStorage.setItem(STORAGE_KEY, ocrLanguage);
+  }, [ocrLanguage]);
+
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
     if (files && files.length > 0) {
@@ -58,7 +112,11 @@ const CaptureImageInner = () => {
           const imageData = event.target?.result as string;
           setCapturedImages((prev) => [
             ...prev,
-            { id: crypto.randomUUID(), data: imageData },
+            {
+              id: crypto.randomUUID(),
+              originalData: imageData,
+              croppedData: null,
+            },
           ]);
         };
         reader.readAsDataURL(file);
@@ -71,6 +129,18 @@ const CaptureImageInner = () => {
     setCapturedImages((prev) => prev.filter((img) => img.id !== id));
   };
 
+  const handleCropComplete = (croppedImage: string) => {
+    if (!croppingImageId) return;
+    setCapturedImages((prev) =>
+      prev.map((img) =>
+        img.id === croppingImageId
+          ? { ...img, croppedData: croppedImage }
+          : img,
+      ),
+    );
+    setCroppingImageId(null);
+  };
+
   const handleProcess = async () => {
     setIsProcessing(true);
     setProcessingProgress({ current: 0, total: capturedImages.length });
@@ -78,14 +148,18 @@ const CaptureImageInner = () => {
     const imageCount = capturedImages.length;
 
     try {
+      const imagesToProcess = capturedImages.map(
+        (img) => img.croppedData || img.originalData,
+      );
+
       let allTexts: string[];
 
       if (imageCount <= 4) {
-        const worker = await createWorker("eng");
+        const worker = await createWorker(ocrLanguage);
         const texts: string[] = [];
 
-        for (let i = 0; i < capturedImages.length; i++) {
-          const ret = await worker.recognize(capturedImages[i].data);
+        for (let i = 0; i < imagesToProcess.length; i++) {
+          const ret = await worker.recognize(imagesToProcess[i]);
           texts.push(ret.data.text);
           setProcessingProgress({
             current: i + 1,
@@ -97,13 +171,12 @@ const CaptureImageInner = () => {
         allTexts = texts;
       } else {
         const scheduler = createScheduler();
-        const workerN = Math.min(4, imageCount); // Max 4 workers
+        const workerN = Math.min(4, imageCount);
 
-        // Create and add workers to scheduler
         const workerPromises = [];
         for (let i = 0; i < workerN; i++) {
           workerPromises.push(
-            createWorker("eng").then((worker) => {
+            createWorker(ocrLanguage).then((worker) => {
               scheduler.addWorker(worker);
             }),
           );
@@ -112,8 +185,8 @@ const CaptureImageInner = () => {
 
         let completedCount = 0;
         allTexts = await Promise.all(
-          capturedImages.map(async (image) => {
-            const result = await scheduler.addJob("recognize", image.data);
+          imagesToProcess.map(async (imageData) => {
+            const result = await scheduler.addJob("recognize", imageData);
             completedCount++;
             setProcessingProgress({
               current: completedCount,
@@ -126,9 +199,17 @@ const CaptureImageInner = () => {
         await scheduler.terminate();
       }
 
+      // Fix hyphenated line breaks (e.g., "continua-\nción" -> "continuación")
+      const processedTexts = allTexts.map((text) => {
+        return text.replace(
+          /([a-zA-ZáéíóúÁÉÍÓÚñÑ]+)-\s*([a-zA-ZáéíóúÁÉÍÓÚñÑ]+)/g,
+          "$1$2",
+        );
+      });
+
       // Set all quotes at once when processing is complete
       setQuotesMetadata(
-        allTexts.map((text) => ({
+        processedTexts.map((text) => ({
           text,
           chapter: "",
           isPublic: false,
@@ -291,17 +372,31 @@ const CaptureImageInner = () => {
                   className="relative bg-background-elevated border border-background-muted rounded-lg overflow-hidden aspect-square group"
                 >
                   <img
-                    src={image.data}
+                    src={image.croppedData || image.originalData}
                     alt="Captured"
                     className="w-full h-full object-cover"
                   />
-                  <button
-                    onClick={() => handleRemoveImage(image.id)}
-                    className="absolute top-2 right-2 p-1.5 bg-background/80 backdrop-blur-sm hover:bg-danger/90 text-danger hover:text-background border border-border hover:border-danger rounded-lg transition-all opacity-0 group-hover:opacity-100 shadow-lg"
-                    title="Remove image"
-                  >
-                    <Trash2 size={16} />
-                  </button>
+                  {image.croppedData && (
+                    <div className="absolute bottom-2 left-2 px-2 py-0.5 bg-primary/80 text-xs text-white rounded">
+                      Cropped
+                    </div>
+                  )}
+                  <div className="absolute top-2 right-2 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                    <button
+                      onClick={() => setCroppingImageId(image.id)}
+                      className="p-1.5 bg-background/80 backdrop-blur-sm hover:bg-primary text-foreground hover:text-white rounded-lg transition-all"
+                      title="Crop image"
+                    >
+                      <Crop size={14} />
+                    </button>
+                    <button
+                      onClick={() => handleRemoveImage(image.id)}
+                      className="p-1.5 bg-background/80 backdrop-blur-sm hover:bg-danger/90 text-danger hover:text-background border border-border hover:border-danger rounded-lg transition-all"
+                      title="Remove image"
+                    >
+                      <Trash2 size={14} />
+                    </button>
+                  </div>
                 </div>
               ))}
 
@@ -320,6 +415,23 @@ const CaptureImageInner = () => {
               </button>
             </div>
           )}
+
+          {/* Language Selector */}
+          <div className="flex items-center gap-2">
+            <Globe size={18} className="text-foreground-muted" />
+            <Select value={ocrLanguage} onValueChange={setOcrLanguage}>
+              <SelectTrigger className="flex-1">
+                <SelectValue placeholder="Select language" />
+              </SelectTrigger>
+              <SelectContent>
+                {OCR_LANGUAGES.map((lang) => (
+                  <SelectItem key={lang.code} value={lang.code}>
+                    {lang.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
 
           {/* Action Buttons */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -391,7 +503,10 @@ const CaptureImageInner = () => {
                     <DialogTrigger asChild>
                       <button className="relative bg-background-elevated border border-background-muted rounded-lg overflow-hidden hover:border-primary transition-colors cursor-pointer group max-h-48">
                         <img
-                          src={capturedImages[index]?.data}
+                          src={
+                            capturedImages[index]?.croppedData ||
+                            capturedImages[index]?.originalData
+                          }
                           alt={`Quote ${index + 1}`}
                           className="w-full h-full object-cover"
                         />
@@ -404,7 +519,10 @@ const CaptureImageInner = () => {
                     </DialogTrigger>
                     <DialogContent className="max-w-[90vw] max-h-[90vh] p-0 overflow-hidden">
                       <img
-                        src={capturedImages[index]?.data}
+                        src={
+                          capturedImages[index]?.croppedData ||
+                          capturedImages[index]?.originalData
+                        }
                         alt={`Quote ${index + 1} - Full size`}
                         className="w-full h-full object-contain"
                       />
@@ -458,6 +576,18 @@ const CaptureImageInner = () => {
             </div>
           )}
         </div>
+
+        {/* Cropping Modal - always rendered when active */}
+        {croppingImageId && (
+          <ImageCropper
+            image={
+              capturedImages.find((img) => img.id === croppingImageId)
+                ?.originalData || ""
+            }
+            onCropComplete={handleCropComplete}
+            onCancel={() => setCroppingImageId(null)}
+          />
+        )}
       </div>
     );
   }

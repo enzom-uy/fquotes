@@ -1,6 +1,13 @@
 import { useState } from "react";
-import { Menu, X, Camera, BookMarked, User, LogOut } from "lucide-react";
+import { Camera, BookMarked, User, LogOut, ChevronDown } from "lucide-react";
 import { authClient } from "@/lib/auth-client";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 interface NavbarMenuProps {
   currentPath: string;
@@ -13,7 +20,6 @@ export const NavbarMenu = ({
   userName,
   userImage,
 }: NavbarMenuProps) => {
-  const [isOpen, setIsOpen] = useState(false);
   const [isSigningOut, setIsSigningOut] = useState(false);
 
   const handleSignOut = async () => {
@@ -38,93 +44,77 @@ export const NavbarMenu = ({
   ];
 
   return (
-    <>
-      {/* Mobile Menu Button */}
-      <button
-        onClick={() => setIsOpen(!isOpen)}
-        className="md:hidden p-2 rounded-lg hover:bg-background-muted transition-colors"
-        aria-label="Toggle menu"
-      >
-        {isOpen ? <X size={24} /> : <Menu size={24} />}
-      </button>
-
-      {/* Mobile Menu Overlay */}
-      {isOpen && (
-        <div
-          className="fixed inset-0 bg-background/80 backdrop-blur-sm z-40 md:hidden"
-          onClick={() => setIsOpen(false)}
-        />
-      )}
-
-      {/* Mobile Menu */}
-      <div
-        className={`
-          fixed top-[73px] left-0 right-0 bg-background-elevated border-b border-border z-50
-          md:hidden transition-all duration-300 ease-in-out
-          ${isOpen ? "translate-y-0 opacity-100" : "-translate-y-full opacity-0 pointer-events-none"}
-        `}
-      >
-        <nav className="flex flex-col p-4 gap-2">
-          {navItems.map((item) => {
-            const Icon = item.icon;
-            const isActive = currentPath === item.href;
-            return (
-              <a
-                key={item.href}
-                href={item.href}
-                className={`
-                  flex items-center gap-3 px-4 py-3 rounded-lg transition-colors
-                  ${
-                    isActive
-                      ? "bg-primary/10 text-primary font-medium"
-                      : "text-foreground-muted hover:text-foreground hover:bg-background-muted"
-                  }
-                `}
-                onClick={() => setIsOpen(false)}
-              >
-                <Icon size={20} />
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <button
+          className="md:hidden flex items-center gap-1 rounded-lg hover:bg-background-muted transition-colors p-1"
+          aria-label="Open menu"
+        >
+          {userImage ? (
+            <img
+              src={userImage}
+              alt={userName || "User"}
+              className="w-8 h-8 rounded-full object-cover"
+              referrerPolicy="no-referrer"
+            />
+          ) : (
+            <div className="w-8 h-8 rounded-full bg-background-muted flex items-center justify-center">
+              <User size={18} className="text-foreground-muted" />
+            </div>
+          )}
+          <ChevronDown size={14} className="text-foreground-muted" />
+        </button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="end" className="w-56">
+        {navItems.map((item) => {
+          const Icon = item.icon;
+          const isActive = currentPath === item.href;
+          return (
+            <DropdownMenuItem
+              key={item.href}
+              asChild
+              className={isActive ? "bg-primary/10 text-primary" : ""}
+            >
+              <a href={item.href} className="flex items-center gap-2 cursor-pointer">
+                <Icon size={16} />
                 {item.label}
               </a>
-            );
-          })}
+            </DropdownMenuItem>
+          );
+        })}
 
-          {/* Profile Link in Mobile */}
+        <DropdownMenuSeparator />
+
+        <DropdownMenuItem asChild>
           <a
             href="/profile"
-            className={`
-              flex items-center gap-3 px-4 py-3 rounded-lg transition-colors border-t border-border mt-2 pt-4
-              ${
-                currentPath === "/profile"
-                  ? "bg-primary/10 text-primary font-medium"
-                  : "text-foreground-muted hover:text-foreground hover:bg-background-muted"
-              }
-            `}
-            onClick={() => setIsOpen(false)}
+            className="flex items-center gap-2 cursor-pointer"
           >
             {userImage ? (
               <img
                 src={userImage}
                 alt={userName || "User"}
-                className="w-5 h-5 rounded-full object-cover"
+                className="w-4 h-4 rounded-full object-cover"
                 referrerPolicy="no-referrer"
               />
             ) : (
-              <User size={20} />
+              <User size={16} />
             )}
             {userName || "Profile"}
           </a>
+        </DropdownMenuItem>
 
-          {/* Sign Out Button in Mobile */}
-          <button
-            onClick={handleSignOut}
-            disabled={isSigningOut}
-            className="flex items-center gap-3 px-4 py-3 rounded-lg transition-colors text-danger hover:bg-danger/10 disabled:opacity-50 disabled:cursor-not-allowed w-full text-left"
-          >
-            <LogOut size={20} />
-            {isSigningOut ? "Signing out..." : "Sign Out"}
-          </button>
-        </nav>
-      </div>
-    </>
+        <DropdownMenuSeparator />
+
+        <DropdownMenuItem
+          onClick={handleSignOut}
+          disabled={isSigningOut}
+          className="text-danger focus:text-danger cursor-pointer"
+        >
+          <LogOut size={16} className="mr-2" />
+          {isSigningOut ? "Signing out..." : "Sign Out"}
+        </DropdownMenuItem>
+      </DropdownMenuContent>
+    </DropdownMenu>
   );
 };
