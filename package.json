@@ -11,7 +11,7 @@
   },
   "dependencies": {
     "@astrojs/check": "^0.9.4",
-    "@astrojs/netlify": "^6.6.4",
+    "@astrojs/cloudflare": "^12.6.12",
     "@astrojs/react": "^4.0.4",
     "@astrojs/tailwind": "^5.1.4",
     "@hookform/resolvers": "^5.2.2",
@@ -50,6 +50,7 @@
     "@types/react": "^19.0.1",
     "@types/react-dom": "^19.0.2",
     "@types/tesseract.js": "^2.0.0",
-    "drizzle-kit": "^0.31.9"
+    "drizzle-kit": "^0.31.9",
+    "wrangler": "^4.67.0"
   }
 }
