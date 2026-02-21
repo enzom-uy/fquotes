@@ -98,6 +98,9 @@ importers:
       react-hook-form:
         specifier: ^7.71.1
         version: 7.71.1(react@19.2.4)
+      react-image-crop:
+        specifier: ^11.0.10
+        version: 11.0.10(react@19.2.4)
       tailwind-merge:
         specifier: ^3.0.2
         version: 3.4.0
@@ -4944,6 +4947,11 @@ packages:
     engines: {node: '>=18.0.0'}
     peerDependencies:
       react: ^16.8.0 || ^17 || ^18 || ^19
+
+  react-image-crop@11.0.10:
+    resolution: {integrity: sha512-+5FfDXUgYLLqBh1Y/uQhIycpHCbXkI50a+nbfkB1C0xXXUTwkisHDo2QCB1SQJyHCqIuia4FeyReqXuMDKWQTQ==}
+    peerDependencies:
+      react: '>=16.13.1'
 
   react-refresh@0.17.0:
     resolution: {integrity: sha512-z6F7K9bV85EfseRCp2bzrpyQ0Gkw1uLoCel9XBVWPg/TjRj94SkJzUTGfOa4bs7iJvBWtQG0Wq7wnI0syw3EBQ==}
@@ -11052,6 +11060,10 @@ snapshots:
       scheduler: 0.27.0
 
   react-hook-form@7.71.1(react@19.2.4):
+    dependencies:
+      react: 19.2.4
+
+  react-image-crop@11.0.10(react@19.2.4):
     dependencies:
       react: 19.2.4
 

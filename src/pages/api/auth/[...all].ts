@@ -1,6 +1,8 @@
 import { auth } from "@/lib/auth";
 import { APIRoute } from "astro";
 
+export const prerender = false;
+
 export const ALL: APIRoute = async (ctx) => {
   const response = await auth.handler(ctx.request);
 
