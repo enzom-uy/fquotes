@@ -9,6 +9,7 @@ export interface UpdateQuotePayload {
   tags?: string[] | null;
   bookId?: string;
   openlibraryId?: string;
+  coverUrl?: string;
 }
 
 async function updateQuote(userId: string, quoteId: string, payload: UpdateQuotePayload) {

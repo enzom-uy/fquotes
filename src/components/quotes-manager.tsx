@@ -298,15 +298,20 @@ const QuotesManagerInner = ({
     if (editedFields.selectedBook) {
       const newBookId = editedFields.selectedBook.bookId;
       const newOpenlibraryId = editedFields.selectedBook.openlibraryId;
+      const newCoverUrl = editedFields.selectedBook.coverUrl;
 
       console.log("📚 Selected book data:", editedFields.selectedBook);
       console.log("   - bookId:", newBookId);
       console.log("   - openlibraryId:", newOpenlibraryId);
+      console.log("   - coverUrl:", newCoverUrl);
 
       if (newBookId) {
         payload.bookId = newBookId;
       } else if (newOpenlibraryId) {
         payload.openlibraryId = newOpenlibraryId;
+        if (newCoverUrl) {
+          payload.coverUrl = newCoverUrl;
+        }
       }
     }
 
