@@ -4,6 +4,8 @@ import tailwind from "@astrojs/tailwind";
 
 import cloudflare from "@astrojs/cloudflare";
 
+import netlify from "@astrojs/netlify";
+
 export default defineConfig({
   integrations: [
     react(),
@@ -13,5 +15,6 @@ export default defineConfig({
   ],
 
   output: "server",
-  adapter: cloudflare({ imageService: "compile" }),
+  adapter: netlify(),
 });
+
