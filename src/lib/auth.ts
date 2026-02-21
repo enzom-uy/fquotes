@@ -26,13 +26,33 @@ export const auth = betterAuth({
       verification: schema.verification,
     },
   }),
+  secret: process.env.AUTH_SECRET!,
+  baseURL: process.env.BETTER_AUTH_URL!,
+  trustedOrigins: [
+    process.env.BETTER_AUTH_URL!,
+    process.env.PUBLIC_FRONTEND_URL!,
+  ].filter(Boolean),
   socialProviders: {
     google: {
       clientId: process.env.AUTH_GOOGLE_ID!,
       clientSecret: process.env.AUTH_GOOGLE_SECRET!,
     },
   },
-  baseURL: process.env.PUBLIC_FRONTEND_URL!,
-  secret: process.env.AUTH_SECRET!,
-  trustedOrigins: [process.env.PUBLIC_FRONTEND_URL!],
+  onAPIError: {
+    throw: true,
+    onError: (err, ctx) => {
+      console.error("Auth error:", err);
+    },
+    errorURL: "/auth/error",
+  },
+  advanced: {
+    cookies: {
+      state: {
+        attributes: {
+          sameSite: "lax",
+          secure: process.env.NODE_ENV === "production",
+        },
+      },
+    },
+  },
 });
