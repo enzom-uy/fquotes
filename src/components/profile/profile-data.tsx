@@ -2,35 +2,12 @@ import { useState } from "react";
 import {
   BookOpen,
   Star,
-  Globe,
-  Lock,
-  Share2,
-  Calendar,
-  Loader2,
   Frown,
 } from "lucide-react";
 import { useFavoriteToggle, MAX_FAVORITES } from "@/hooks/use-favorite-toggle";
 import { QueryProvider } from "../query-provider";
 import { toast } from "@/hooks/use-toast";
-
-interface QuoteBook {
-  id?: string;
-  title: string;
-  authorName: string | null;
-  coverUrl?: string | null;
-}
-
-interface QuoteData {
-  id: string;
-  text: string;
-  chapter: string | null;
-  isPublic: boolean;
-  isFavorite: boolean;
-  tags: string[] | null;
-  createdAt: string;
-  bookId: string;
-  book: QuoteBook | null;
-}
+import { QuoteCard, type QuoteData } from "../quote-card";
 
 interface ProfileDataProps {
   user: {
@@ -43,122 +20,6 @@ interface ProfileDataProps {
   initialRecentQuotes: QuoteData[] | undefined;
   userId: string;
   error: boolean;
-}
-
-const formatDate = (dateString: string) => {
-  const date = new Date(dateString);
-  return date.toLocaleDateString("en-US", {
-    month: "short",
-    day: "numeric",
-    year: "numeric",
-  });
-};
-
-function QuoteCardViewOnly({
-  quote,
-  onToggleFavorite,
-  isTogglingFavorite,
-  canAddFavorite,
-}: {
-  quote: QuoteData;
-  onToggleFavorite: (quoteId: string, isFavorite: boolean) => void;
-  isTogglingFavorite: boolean;
-  canAddFavorite: boolean;
-}) {
-  const isFavorite = quote.isFavorite;
-  const isDisabled = !isFavorite && !canAddFavorite;
-
-  return (
-    <div
-      className={`bg-background-elevated border rounded-xl p-5 hover:border-primary transition-colors ${
-        isFavorite ? "border-l-[3px] border-l-warning" : "border-border"
-      }`}
-    >
-      <div className="flex flex-col gap-3">
-        {/* Quote text */}
-        <div className="flex items-start justify-between gap-3">
-          <p className="text-sm leading-relaxed italic flex-1">
-            &ldquo;{quote.text}&rdquo;
-          </p>
-          {isFavorite && (
-            <Star
-              size={16}
-              fill="currentColor"
-              className="text-warning flex-shrink-0 mt-0.5"
-            />
-          )}
-        </div>
-
-        {/* Book & author */}
-        {quote.book && (
-          <div className="flex flex-col gap-1">
-            <span className="text-sm font-medium text-foreground-muted truncate">
-              {quote.book.title}
-              {quote.chapter ? `, ${quote.chapter}` : ""}
-            </span>
-            {quote.book.authorName && (
-              <span className="text-xs text-foreground-subtle truncate">
-                by {quote.book.authorName}
-              </span>
-            )}
-          </div>
-        )}
-
-        {/* Footer: date + visibility + actions */}
-        <div className="flex items-center justify-between pt-3 border-t border-border">
-          <div className="flex items-center gap-3 text-xs text-foreground-subtle">
-            <div className="flex items-center gap-1">
-              <Calendar size={12} />
-              <span>{formatDate(quote.createdAt)}</span>
-            </div>
-            <div className="flex items-center gap-1">
-              {quote.isPublic ? (
-                <Globe size={12} className="text-success" />
-              ) : (
-                <Lock size={12} className="text-foreground-subtle" />
-              )}
-            </div>
-          </div>
-          <div className="flex items-center gap-1">
-            {/* Favorite toggle - Star icon */}
-            <button
-              onClick={() => onToggleFavorite(quote.id, !isFavorite)}
-              disabled={isTogglingFavorite || isDisabled}
-              className={`p-1.5 rounded-md transition-colors ${
-                isDisabled
-                  ? "opacity-30 cursor-not-allowed"
-                  : "text-foreground-muted hover:bg-background-muted hover:text-warning"
-              }`}
-              title={
-                isFavorite
-                  ? "Remove from favorites"
-                  : isDisabled
-                    ? "Maximum favorites reached"
-                    : "Add to favorites"
-              }
-            >
-              {isTogglingFavorite ? (
-                <Loader2 size={14} className="animate-spin" />
-              ) : (
-                <Star
-                  size={14}
-                  fill={isFavorite ? "currentColor" : "none"}
-                  className={isFavorite ? "text-warning" : ""}
-                />
-              )}
-            </button>
-            {/* Share button */}
-            <button
-              className="p-1.5 rounded-md text-foreground-muted hover:bg-background-muted hover:text-primary transition-colors"
-              title="Share"
-            >
-              <Share2 size={14} />
-            </button>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
 }
 
 function ProfileData({
@@ -192,14 +53,10 @@ function ProfileData({
         if (quoteToMove) {
           const updatedQuote = { ...quoteToMove, isFavorite: true };
           setFavoriteQuotes((prev) => [updatedQuote, ...prev]);
-          setRecentQuotes((prev) =>
-            prev.filter((q) => q.id !== quoteId),
-          );
+          setRecentQuotes((prev) => prev.filter((q) => q.id !== quoteId));
         }
       } else {
-        setFavoriteQuotes((prev) =>
-          prev.filter((q) => q.id !== quoteId),
-        );
+        setFavoriteQuotes((prev) => prev.filter((q) => q.id !== quoteId));
         const quoteToMove = initialFavoriteQuotes!.find(
           (q) => q.id === quoteId,
         );
@@ -310,9 +167,9 @@ function ProfileData({
           Favorite Quotes
         </h2>
         {favoriteQuotes.length > 0 ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="columns-1 md:columns-2 gap-4 space-y-4">
             {favoriteQuotes.map((quote) => (
-              <QuoteCardViewOnly
+              <QuoteCard
                 key={quote.id}
                 quote={quote}
                 onToggleFavorite={handleToggleFavorite}
@@ -354,9 +211,9 @@ function ProfileData({
               View all &rarr;
             </a>
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="columns-1 md:columns-2 gap-4 space-y-4">
             {recentQuotes.map((quote) => (
-              <QuoteCardViewOnly
+              <QuoteCard
                 key={quote.id}
                 quote={quote}
                 onToggleFavorite={handleToggleFavorite}
