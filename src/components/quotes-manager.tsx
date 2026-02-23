@@ -36,11 +36,11 @@ import {
 } from "./ui/dropdown-menu";
 import { toast } from "@/hooks/use-toast";
 import { type QuotesManagerProps, type QuoteData, type PaginationInfo, type QuoteBook } from "./quotes-manager/types";
-import { QuoteCard } from "./quotes-manager/quote-card";
+import { QuoteCard } from "./quote-card";
 import { QuoteCardSkeleton } from "./quotes-manager/quote-card-skeleton";
 import { EmptyState } from "./quotes-manager/empty-state";
 import { QuotesPagination } from "./quotes-manager/quotes-pagination";
-import type { BookResult } from "./book-search";
+import type { BookResult } from "./capture/book-search";
 
 export const QuotesManager = (props: QuotesManagerProps) => (
   <QueryProvider>
@@ -133,11 +133,11 @@ const QuotesManagerInner = ({
 
   const { mutate: toggleFavorite } = useFavoriteToggle({
     userId,
-    onSuccess: (isFavorite) => {
+    onSuccess: (isFavorite, quoteId) => {
       setPendingFavoriteId(null);
       setQuotes((prev) =>
         prev.map((q) =>
-          q.id === pendingFavoriteId ? { ...q, isFavorite } : q
+          q.id === quoteId ? { ...q, isFavorite } : q
         )
       );
     },
@@ -521,11 +521,12 @@ const QuotesManagerInner = ({
 
       {/* Quotes Grid */}
       {!(isSearchActive && isFetching) && displayQuotes.length > 0 && (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div className="columns-1 md:columns-2 gap-6 space-y-6">
           {displayQuotes.map((quote) => (
             <QuoteCard
               key={quote.id}
               quote={quote}
+              editable={true}
               highlightQuery={highlightQuery}
               bulkMode={bulkMode}
               selectedIds={selectedIds}

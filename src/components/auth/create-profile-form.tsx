@@ -2,9 +2,9 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { useState } from "react";
-import { Button } from "./ui/button";
-import { Input } from "./ui/input";
-import { FileUpload } from "./ui/file-upload";
+import { Button } from "../ui/button";
+import { Input } from "../ui/input";
+import { FileUpload } from "../ui/file-upload";
 import {
   Form,
   FormControl,
@@ -13,10 +13,10 @@ import {
   FormLabel,
   FormMessage,
   FormDescription,
-} from "./ui/form";
+} from "../ui/form";
 import { useUpdateProfile } from "@/hooks/use-update-profile";
 import { ApiError } from "@/lib/api";
-import { QueryProvider } from "./query-provider";
+import { QueryProvider } from "../query-provider";
 
 const profileFormSchema = z.object({
   image: z.string().optional(),

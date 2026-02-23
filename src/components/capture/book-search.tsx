@@ -7,9 +7,9 @@ import {
   CommandGroup,
   CommandItem,
   CommandList,
-} from "./ui/command";
-import { Popover, PopoverContent, PopoverTrigger } from "./ui/popover";
-import { Input } from "./ui/input";
+} from "../ui/command";
+import { Popover, PopoverContent, PopoverTrigger } from "../ui/popover";
+import { Input } from "../ui/input";
 import { useBookSearch, type BookResult } from "@/hooks/use-book-search";
 
 export type { BookResult };
@@ -42,7 +42,12 @@ export const BookSearch = ({
 }: BookSearchProps) => {
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState("");
+  const [imageLoaded, setImageLoaded] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    setImageLoaded(false);
+  }, [selectedBook?.coverUrl]);
 
   const debouncedQuery = useDebounce(query, 400);
   const { data: results = [], isFetching } = useBookSearch(debouncedQuery);
@@ -78,15 +83,23 @@ export const BookSearch = ({
       {selectedBook && (
         <div className="mb-2 flex items-center gap-3 rounded-lg border border-primary/30 bg-background-elevated p-2">
           {selectedBook.coverUrl ? (
-            <img
-              src={selectedBook.coverUrl}
-              alt={selectedBook.title}
-              width={36}
-              height={54}
-              className="h-[54px] w-[36px] flex-shrink-0 rounded object-cover"
-            />
+            <>
+              {!imageLoaded && (
+                <div className="flex h-[54px] w-[36px] flex-shrink-0 animate-shimmer rounded" />
+              )}
+              <img
+                src={selectedBook.coverUrl}
+                alt={selectedBook.title}
+                width={36}
+                height={54}
+                loading="lazy"
+                decoding="async"
+                onLoad={() => setImageLoaded(true)}
+                className={`h-[54px] w-[36px] flex-shrink-0 rounded object-cover transition-opacity ${imageLoaded ? 'opacity-100' : 'opacity-0 absolute'}`}
+              />
+            </>
           ) : (
-            <div className="flex h-[54px] w-[36px] flex-shrink-0 items-center justify-center rounded bg-background-muted">
+            <div className="flex h-[54px] w-[36px] flex-shrink-0 items-center justify-center rounded animate-shimmer">
               <Book className="h-4 w-4 text-foreground-muted" />
             </div>
           )}
@@ -168,7 +181,15 @@ export const BookSearch = ({
                       >
                         {book.coverUrl ? (
                           <div className="flex-shrink-0">
-                            <img src={book.coverUrl} height={50} width={50} className="rounded" />
+                            <img 
+                              src={book.coverUrl} 
+                              height={50} 
+                              width={50} 
+                              loading="lazy"
+                              decoding="async"
+                              alt="" 
+                              className="rounded bg-background-muted"
+                            />
                           </div>
                         ) : (
                           <Book className="h-4 w-4 mt-0.5 flex-shrink-0 text-foreground-muted" />

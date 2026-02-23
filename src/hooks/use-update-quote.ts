@@ -1,6 +1,7 @@
 import { useMutation } from "@tanstack/react-query";
 import { api } from "@/lib/api";
-import type { BookResult } from "@/components/book-search";
+import type { BookResult } from "@/components/capture/book-search";
+import { handleApiError } from "./use-api-error";
 
 export interface UpdateQuotePayload {
   text?: string;
@@ -20,5 +21,8 @@ export function useUpdateQuote() {
   return useMutation({
     mutationFn: ({ userId, quoteId, payload }: { userId: string; quoteId: string; payload: UpdateQuotePayload }) =>
       updateQuote(userId, quoteId, payload),
+    onError: (error) => {
+      handleApiError(error, "Failed to update quote");
+    },
   });
 }

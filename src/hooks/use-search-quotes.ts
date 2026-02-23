@@ -1,5 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { api } from "@/lib/api";
+import { handleApiError } from "./use-api-error";
 
 export interface QuoteBookInfo {
   title: string;
@@ -31,9 +32,14 @@ async function searchQuotes(
   userId: string,
   query: string,
 ): Promise<QuoteSearchResult[]> {
-  return api.get<QuoteSearchResult[]>(
-    `/quotes/${userId}/search?query=${encodeURIComponent(query)}`,
-  );
+  try {
+    return await api.get<QuoteSearchResult[]>(
+      `/quotes/${userId}/search?query=${encodeURIComponent(query)}`,
+    );
+  } catch (error) {
+    handleApiError(error, "Failed to search quotes");
+    throw error;
+  }
 }
 
 /**

@@ -1,7 +1,7 @@
 ---
 import Layout from '@/layouts/layout.astro'
 import { BookOpen } from 'lucide-react'
-import { ProfileDataComponent } from '@/components/profile-data'
+import { ProfileDataComponent } from '@/components/profile/profile-data'
 
 export const prerender = false
 
@@ -12,7 +12,7 @@ if (!session || !user) {
   return Astro.redirect('/')
 }
 
-const BACKEND_URL = import.meta.env.PUBLIC_BACKEND_URL || 'http://localhost:5000/api'
+const BACKEND_URL = import.meta.env.PUBLIC_BACKEND_URL
 const cookieHeader = Astro.request.headers.get('cookie') || ''
 
 interface QuoteResponse {
@@ -39,12 +39,13 @@ interface PaginatedResponse {
   perPage: number
 }
 
-// Fetch all data in parallel
 let quoteCount = 0
 let favoriteQuotes: QuoteResponse[] = []
 let recentQuotes: QuoteResponse[] = []
+let error = false
 
 try {
+    console.log('starting fetch.')
   const [countRes, favoritesRes, recentRes] = await Promise.all([
     fetch(`${BACKEND_URL}/quotes/${user.id}/count`, {
       headers: { cookie: cookieHeader },
@@ -57,6 +58,8 @@ try {
     }),
   ])
 
+  console.log(countRes)
+
   if (countRes.ok) {
     quoteCount = await countRes.json()
   }
@@ -67,8 +70,9 @@ try {
     const result: PaginatedResponse = await recentRes.json()
     recentQuotes = result.data
   }
-} catch (error) {
-  console.error('Failed to fetch profile data:', error)
+} catch (err) {
+  console.error('Failed to fetch profile data:', err)
+  error = true
 }
 ---
 
@@ -83,10 +87,11 @@ try {
           email: user.email,
           image: user.image || null,
         }}
-        initialQuoteCount={quoteCount}
-        initialFavoriteQuotes={favoriteQuotes}
-        initialRecentQuotes={recentQuotes}
+        initialQuoteCount={quoteCount ? quoteCount : undefined}
+        initialFavoriteQuotes={favoriteQuotes ? favoriteQuotes : undefined}
+        initialRecentQuotes={recentQuotes ? recentQuotes : undefined}
         userId={user.id}
+        error={error && error}
       />
 
       <!-- Empty State -->

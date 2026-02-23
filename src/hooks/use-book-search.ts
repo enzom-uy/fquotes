@@ -1,5 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { api } from "@/lib/api";
+import { handleApiError } from "./use-api-error";
 
 export interface BookResult {
   title: string;
@@ -15,9 +16,14 @@ export const bookKeys = {
 };
 
 async function searchBooks(query: string): Promise<BookResult[]> {
-  return api.get<BookResult[]>(
-    `/book/search?query=${encodeURIComponent(query)}`,
-  );
+  try {
+    return await api.get<BookResult[]>(
+      `/book/search?query=${encodeURIComponent(query)}`,
+    );
+  } catch (error) {
+    handleApiError(error, "Failed to search books");
+    throw error;
+  }
 }
 
 /**

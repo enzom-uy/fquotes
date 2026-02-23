@@ -2,12 +2,13 @@ import { useState } from "react";
 import { useMutation, type UseMutationResult } from "@tanstack/react-query";
 import { api } from "@/lib/api";
 import { toast } from "@/hooks/use-toast";
+import { handleApiError } from "./use-api-error";
 
 export const MAX_FAVORITES = 5;
 
 interface UseFavoriteToggleOptions {
   userId: string;
-  onSuccess?: (isFavorite: boolean) => void;
+  onSuccess?: (isFavorite: boolean, quoteId: string) => void;
   onError?: () => void;
 }
 
@@ -30,19 +31,20 @@ export function useFavoriteToggle({
     onMutate: ({ quoteId }) => {
       setPendingId(quoteId);
     },
-    onSuccess: (_, { isFavorite }) => {
+    onSuccess: (_, { quoteId, isFavorite }) => {
       setPendingId(null);
-      onSuccess?.(isFavorite);
+      onSuccess?.(isFavorite, quoteId);
       toast({
         title: isFavorite ? "Added to favorites" : "Removed from favorites",
       });
     },
-    onError: () => {
+    onError: (error) => {
       setPendingId(null);
       onError?.();
+      const message = handleApiError(error, "Failed to update favorite. Please try again.");
       toast({
         title: "Error",
-        description: "Failed to update favorite. Please try again.",
+        description: message,
         variant: "destructive",
       });
     },

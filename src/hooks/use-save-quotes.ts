@@ -1,6 +1,7 @@
 import { useMutation } from "@tanstack/react-query";
 import { api } from "@/lib/api";
 import type { BookResult } from "./use-book-search";
+import { handleApiError } from "./use-api-error";
 
 interface QuotePayload {
   text: string;
@@ -28,6 +29,9 @@ export function useSaveQuotes() {
         payloads.map((payload) => api.post("/quotes", payload)),
       );
       return responses;
+    },
+    onError: (error) => {
+      handleApiError(error, "Failed to save quotes");
     },
   });
 }
