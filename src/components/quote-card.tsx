@@ -253,21 +253,25 @@ export function QuoteCard({
         <div className="flex flex-col gap-1.5 text-sm text-foreground-muted border-t border-border pt-3">
           <div className="flex items-center gap-2">
             <BookOpen size={16} className="text-primary flex-shrink-0" />
-            <span className="truncate">
-              {highlightMatches(quote.book.title, highlightQuery)}
-              {quote.chapter ? (
-                <>, {highlightMatches(quote.chapter, highlightQuery)}</>
-              ) : (
-                ""
-              )}
-            </span>
+            <span
+              className="truncate"
+              dangerouslySetInnerHTML={{
+                __html: highlightMatches(
+                  `${quote.book.title}${quote.chapter ? `, ${quote.chapter}` : ""}`,
+                  highlightQuery,
+                ),
+              }}
+            />
           </div>
           {quote.book.authorName && (
             <div className="flex items-center gap-2">
               <User size={16} className="text-accent flex-shrink-0" />
-              <span className="truncate">
-                {highlightMatches(quote.book.authorName, highlightQuery)}
-              </span>
+              <span
+                className="truncate"
+                dangerouslySetInnerHTML={{
+                  __html: highlightMatches(quote.book.authorName, highlightQuery),
+                }}
+              />
             </div>
           )}
         </div>
@@ -377,9 +381,10 @@ export function QuoteCard({
             <span
               key={tag}
               className="text-[11px] text-foreground-subtle bg-background-muted px-2 py-0.5 rounded-full"
-            >
-              #{highlightMatches(tag, highlightQuery)}
-            </span>
+              dangerouslySetInnerHTML={{
+                __html: `#${highlightMatches(tag, highlightQuery)}`,
+              }}
+            />
           ))}
         </div>
       )}
