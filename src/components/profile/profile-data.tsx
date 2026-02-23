@@ -30,16 +30,18 @@ function ProfileData({
   userId,
   error,
 }: ProfileDataProps) {
-  const [quoteCount] = useState(initialQuoteCount);
+  const [quoteCount] = useState(initialQuoteCount ?? 0);
   const [favoriteQuotes, setFavoriteQuotes] = useState<QuoteData[]>(
-    initialFavoriteQuotes!,
+    initialFavoriteQuotes ?? [],
   );
   const [recentQuotes, setRecentQuotes] = useState<QuoteData[]>(
-    initialRecentQuotes!,
+    initialRecentQuotes ?? [],
   );
   const [pendingFavoriteId, setPendingFavoriteId] = useState<string | null>(
     null,
   );
+
+  const currentFavoriteCount = error ? undefined : favoriteQuotes.length;
 
   const { mutate: toggleFavorite } = useFavoriteToggle({
     userId,
@@ -57,7 +59,7 @@ function ProfileData({
         }
       } else {
         setFavoriteQuotes((prev) => prev.filter((q) => q.id !== quoteId));
-        const quoteToMove = initialFavoriteQuotes!.find(
+        const quoteToMove = initialFavoriteQuotes?.find(
           (q) => q.id === quoteId,
         );
         if (quoteToMove) {
@@ -86,7 +88,6 @@ function ProfileData({
   };
 
   const canAddFavorite = favoriteQuotes.length < MAX_FAVORITES;
-  const currentFavoriteCount = favoriteQuotes.length;
 
   return (
     <div className="space-y-8">
@@ -119,7 +120,7 @@ function ProfileData({
         <div className="p-6">
           <div className="grid grid-cols-2 gap-4">
             <div className="flex flex-col items-center gap-2 p-4 bg-background-muted rounded-xl">
-              {quoteCount ? (
+              {quoteCount !== undefined ? (
                 <>
                   <BookOpen size={24} className="text-primary" />
                   <div className="text-center">
@@ -137,7 +138,7 @@ function ProfileData({
               )}
             </div>
             <div className="flex flex-col items-center gap-2 p-4 bg-background-muted rounded-xl">
-              {currentFavoriteCount ? (
+              {currentFavoriteCount !== undefined ? (
                 <>
                   <Star size={24} className="text-warning" />
                   <div className="text-center">
