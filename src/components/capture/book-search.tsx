@@ -7,9 +7,9 @@ import {
   CommandGroup,
   CommandItem,
   CommandList,
-} from "./ui/command";
-import { Popover, PopoverContent, PopoverTrigger } from "./ui/popover";
-import { Input } from "./ui/input";
+} from "../ui/command";
+import { Popover, PopoverContent, PopoverTrigger } from "../ui/popover";
+import { Input } from "../ui/input";
 import { useBookSearch, type BookResult } from "@/hooks/use-book-search";
 
 export type { BookResult };

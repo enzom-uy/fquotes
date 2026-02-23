@@ -15,7 +15,7 @@ import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
-import { BookSearch, type BookResult } from "@/components/book-search";
+import { BookSearch, type BookResult } from "@/components/capture/book-search";
 import { TagsInput } from "@/components/tags-input";
 import { type QuoteData } from "./types";
 import { highlightMatches, formatDate } from "./utils";

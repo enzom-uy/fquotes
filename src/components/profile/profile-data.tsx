@@ -10,7 +10,7 @@ import {
   Frown,
 } from "lucide-react";
 import { useFavoriteToggle, MAX_FAVORITES } from "@/hooks/use-favorite-toggle";
-import { QueryProvider } from "./query-provider";
+import { QueryProvider } from "../query-provider";
 import { toast } from "@/hooks/use-toast";
 
 interface QuoteBook {
@@ -182,26 +182,26 @@ function ProfileData({
 
   const { mutate: toggleFavorite } = useFavoriteToggle({
     userId,
-    onSuccess: (isFavorite) => {
+    onSuccess: (isFavorite, quoteId) => {
       setPendingFavoriteId(null);
 
       if (isFavorite) {
         const quoteToMove = [...favoriteQuotes, ...recentQuotes].find(
-          (q) => q.id === pendingFavoriteId,
+          (q) => q.id === quoteId,
         );
         if (quoteToMove) {
           const updatedQuote = { ...quoteToMove, isFavorite: true };
           setFavoriteQuotes((prev) => [updatedQuote, ...prev]);
           setRecentQuotes((prev) =>
-            prev.filter((q) => q.id !== pendingFavoriteId),
+            prev.filter((q) => q.id !== quoteId),
           );
         }
       } else {
         setFavoriteQuotes((prev) =>
-          prev.filter((q) => q.id !== pendingFavoriteId),
+          prev.filter((q) => q.id !== quoteId),
         );
         const quoteToMove = initialFavoriteQuotes!.find(
-          (q) => q.id === pendingFavoriteId,
+          (q) => q.id === quoteId,
         );
         if (quoteToMove) {
           const updatedQuote = { ...quoteToMove, isFavorite: false };

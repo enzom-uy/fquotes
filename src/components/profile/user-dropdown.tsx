@@ -6,7 +6,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { User, BookMarked, LogOut, ChevronDown } from "lucide-react";
+import { User, BookMarked, LogOut, ChevronDown, Settings } from "lucide-react";
 import { signOut } from "@/lib/auth-client";
 
 interface UserDropdownProps {
@@ -59,6 +59,12 @@ export const UserDropdown = ({ userName, userImage }: UserDropdownProps) => {
           <a href="/quotes" className="flex items-center gap-2">
             <BookMarked size={16} />
             <span>My Quotes</span>
+          </a>
+        </DropdownMenuItem>
+        <DropdownMenuItem asChild>
+          <a href="/settings" className="flex items-center gap-2">
+            <Settings size={16} />
+            <span>Settings</span>
           </a>
         </DropdownMenuItem>
         <DropdownMenuSeparator />

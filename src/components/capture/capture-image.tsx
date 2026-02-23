@@ -11,7 +11,7 @@ import {
   Crop,
   Globe,
 } from "lucide-react";
-import { Button } from "./ui/button";
+import { Button } from "../ui/button";
 import {
   Select,
   SelectContent,
@@ -22,12 +22,12 @@ import {
 import { createWorker, createScheduler } from "tesseract.js";
 import { EditableQuoteCard, type QuoteMetadata } from "./editable-quote-card";
 import { BookSearch, type BookResult } from "./book-search";
-import { Dialog, DialogContent, DialogTrigger } from "./ui/dialog";
+import { Dialog, DialogContent, DialogTrigger } from "../ui/dialog";
 import { useToast } from "@/hooks/use-toast";
 import { useSession } from "@/lib/auth-client";
 import { QuoteSkeletons } from "./quote-skeleton";
 import { useSaveQuotes, buildQuotePayloads } from "@/hooks/use-save-quotes";
-import { QueryProvider } from "./query-provider";
+import { QueryProvider } from "../query-provider";
 import { ImageCropper } from "./image-cropper";
 
 interface CapturedImage {
@@ -66,6 +66,7 @@ const OCR_LANGUAGES = [
 ];
 
 const STORAGE_KEY = "fquotes-ocr-language";
+const DEFAULT_PUBLIC_KEY = "fquotes-default-public";
 
 export const CaptureImage = () => {
   return (
@@ -97,6 +98,13 @@ const CaptureImageInner = () => {
       return localStorage.getItem(STORAGE_KEY) || "spa";
     }
     return "spa";
+  });
+  const [defaultIsPublic, setDefaultIsPublic] = useState<boolean>(() => {
+    if (typeof window !== "undefined") {
+      const saved = localStorage.getItem(DEFAULT_PUBLIC_KEY);
+      return saved === "true";
+    }
+    return false;
   });
 
   useEffect(() => {
@@ -212,7 +220,7 @@ const CaptureImageInner = () => {
         processedTexts.map((text) => ({
           text,
           chapter: "",
-          isPublic: false,
+          isPublic: defaultIsPublic,
           tags: [],
         })),
       );

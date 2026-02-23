@@ -1,0 +1,24 @@
+---
+export const prerender = false
+
+import Layout from '@/layouts/layout.astro';
+import { SettingsPage } from '@/components/settings/settings-page';
+
+const user = Astro.locals.user;
+const session = Astro.locals.session;
+
+if (!session || !user) {
+  return Astro.redirect('/');
+}
+---
+
+<Layout title="Settings - QuoteKeeper">
+  <SettingsPage 
+    client:load 
+    user={{
+      name: user.name,
+      email: user.email,
+      image: user.image ?? null
+    }}
+  />
+</Layout>

@@ -1,8 +1,8 @@
-import { Textarea } from "./ui/textarea";
-import { Input } from "./ui/input";
-import { Switch } from "./ui/switch";
-import { Label } from "./ui/label";
-import { TagsInput } from "./tags-input";
+import { Textarea } from "../ui/textarea";
+import { Input } from "../ui/input";
+import { Switch } from "../ui/switch";
+import { Label } from "../ui/label";
+import { TagsInput } from "../tags-input";
 import { Globe, Lock, BookOpen, User } from "lucide-react";
 import type { BookResult } from "./book-search";
 

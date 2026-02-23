@@ -1,5 +1,6 @@
 import { useMutation } from "@tanstack/react-query";
 import { api } from "@/lib/api";
+import { handleApiError } from "./use-api-error";
 
 interface UpdateProfileData {
   image?: string;
@@ -14,5 +15,8 @@ export function useUpdateProfile() {
   return useMutation({
     mutationFn: (data: UpdateProfileData) =>
       api.patch("/user/profile", data),
+    onError: (error) => {
+      handleApiError(error, "Failed to update profile");
+    },
   });
 }

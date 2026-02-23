@@ -1,5 +1,6 @@
 import { useMutation } from "@tanstack/react-query";
 import { api } from "@/lib/api";
+import { handleApiError } from "./use-api-error";
 
 interface DeleteQuotesParams {
   userId: string;
@@ -13,5 +14,8 @@ async function deleteQuotes({ userId, quotesIds }: DeleteQuotesParams) {
 export function useDeleteQuotes() {
   return useMutation({
     mutationFn: deleteQuotes,
+    onError: (error) => {
+      handleApiError(error, "Failed to delete quotes");
+    },
   });
 }

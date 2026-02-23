@@ -40,7 +40,7 @@ import { QuoteCard } from "./quotes-manager/quote-card";
 import { QuoteCardSkeleton } from "./quotes-manager/quote-card-skeleton";
 import { EmptyState } from "./quotes-manager/empty-state";
 import { QuotesPagination } from "./quotes-manager/quotes-pagination";
-import type { BookResult } from "./book-search";
+import type { BookResult } from "./capture/book-search";
 
 export const QuotesManager = (props: QuotesManagerProps) => (
   <QueryProvider>
@@ -133,11 +133,11 @@ const QuotesManagerInner = ({
 
   const { mutate: toggleFavorite } = useFavoriteToggle({
     userId,
-    onSuccess: (isFavorite) => {
+    onSuccess: (isFavorite, quoteId) => {
       setPendingFavoriteId(null);
       setQuotes((prev) =>
         prev.map((q) =>
-          q.id === pendingFavoriteId ? { ...q, isFavorite } : q
+          q.id === quoteId ? { ...q, isFavorite } : q
         )
       );
     },
