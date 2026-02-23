@@ -7,6 +7,7 @@ import {
   Share2,
   Calendar,
   Loader2,
+  Frown,
 } from "lucide-react";
 import { useFavoriteToggle, MAX_FAVORITES } from "@/hooks/use-favorite-toggle";
 import { QueryProvider } from "./query-provider";
@@ -37,10 +38,11 @@ interface ProfileDataProps {
     email: string;
     image: string | null;
   };
-  initialQuoteCount: number;
-  initialFavoriteQuotes: QuoteData[];
-  initialRecentQuotes: QuoteData[];
+  initialQuoteCount: number | undefined;
+  initialFavoriteQuotes: QuoteData[] | undefined;
+  initialRecentQuotes: QuoteData[] | undefined;
   userId: string;
+  error: boolean;
 }
 
 const formatDate = (dateString: string) => {
@@ -131,8 +133,8 @@ function QuoteCardViewOnly({
                 isFavorite
                   ? "Remove from favorites"
                   : isDisabled
-                  ? "Maximum favorites reached"
-                  : "Add to favorites"
+                    ? "Maximum favorites reached"
+                    : "Add to favorites"
               }
             >
               {isTogglingFavorite ? (
@@ -165,29 +167,42 @@ function ProfileData({
   initialFavoriteQuotes,
   initialRecentQuotes,
   userId,
+  error,
 }: ProfileDataProps) {
   const [quoteCount] = useState(initialQuoteCount);
-  const [favoriteQuotes, setFavoriteQuotes] = useState<QuoteData[]>(initialFavoriteQuotes);
-  const [recentQuotes, setRecentQuotes] = useState<QuoteData[]>(initialRecentQuotes);
-  const [pendingFavoriteId, setPendingFavoriteId] = useState<string | null>(null);
+  const [favoriteQuotes, setFavoriteQuotes] = useState<QuoteData[]>(
+    initialFavoriteQuotes!,
+  );
+  const [recentQuotes, setRecentQuotes] = useState<QuoteData[]>(
+    initialRecentQuotes!,
+  );
+  const [pendingFavoriteId, setPendingFavoriteId] = useState<string | null>(
+    null,
+  );
 
   const { mutate: toggleFavorite } = useFavoriteToggle({
     userId,
     onSuccess: (isFavorite) => {
       setPendingFavoriteId(null);
-      
+
       if (isFavorite) {
         const quoteToMove = [...favoriteQuotes, ...recentQuotes].find(
-          (q) => q.id === pendingFavoriteId
+          (q) => q.id === pendingFavoriteId,
         );
         if (quoteToMove) {
           const updatedQuote = { ...quoteToMove, isFavorite: true };
           setFavoriteQuotes((prev) => [updatedQuote, ...prev]);
-          setRecentQuotes((prev) => prev.filter((q) => q.id !== pendingFavoriteId));
+          setRecentQuotes((prev) =>
+            prev.filter((q) => q.id !== pendingFavoriteId),
+          );
         }
       } else {
-        setFavoriteQuotes((prev) => prev.filter((q) => q.id !== pendingFavoriteId));
-        const quoteToMove = initialFavoriteQuotes.find(q => q.id === pendingFavoriteId);
+        setFavoriteQuotes((prev) =>
+          prev.filter((q) => q.id !== pendingFavoriteId),
+        );
+        const quoteToMove = initialFavoriteQuotes!.find(
+          (q) => q.id === pendingFavoriteId,
+        );
         if (quoteToMove) {
           const updatedQuote = { ...quoteToMove, isFavorite: false };
           setRecentQuotes((prev) => [updatedQuote, ...prev]);
@@ -235,7 +250,9 @@ function ProfileData({
           )}
           <div className="min-w-0">
             <h1 className="text-2xl font-bold truncate">{user.name}</h1>
-            <p className="text-sm text-foreground-muted truncate">{user.email}</p>
+            <p className="text-sm text-foreground-muted truncate">
+              {user.email}
+            </p>
           </div>
         </div>
 
@@ -245,18 +262,42 @@ function ProfileData({
         <div className="p-6">
           <div className="grid grid-cols-2 gap-4">
             <div className="flex flex-col items-center gap-2 p-4 bg-background-muted rounded-xl">
-              <BookOpen size={24} className="text-primary" />
-              <div className="text-center">
-                <div className="text-2xl font-bold">{quoteCount}</div>
-                <div className="text-xs text-foreground-subtle">Total Quotes</div>
-              </div>
+              {quoteCount ? (
+                <>
+                  <BookOpen size={24} className="text-primary" />
+                  <div className="text-center">
+                    <div className="text-2xl font-bold">{quoteCount}</div>
+                    <div className="text-xs text-foreground-subtle">
+                      Total Quotes
+                    </div>
+                  </div>
+                </>
+              ) : (
+                <StatNotFound
+                  icon={<Frown />}
+                  text={"Quotes count not found."}
+                />
+              )}
             </div>
             <div className="flex flex-col items-center gap-2 p-4 bg-background-muted rounded-xl">
-              <Star size={24} className="text-warning" />
-              <div className="text-center">
-                <div className="text-2xl font-bold">{currentFavoriteCount}</div>
-                <div className="text-xs text-foreground-subtle">Favorites</div>
-              </div>
+              {currentFavoriteCount ? (
+                <>
+                  <Star size={24} className="text-warning" />
+                  <div className="text-center">
+                    <div className="text-2xl font-bold">
+                      {currentFavoriteCount}
+                    </div>
+                    <div className="text-xs text-foreground-subtle">
+                      Favorites
+                    </div>
+                  </div>{" "}
+                </>
+              ) : (
+                <StatNotFound
+                  icon={<Frown />}
+                  text={"Favorites quotes count not found."}
+                />
+              )}
             </div>
           </div>
         </div>
@@ -284,14 +325,22 @@ function ProfileData({
           <div className="bg-background-elevated border border-border rounded-xl p-8 text-center">
             <Star size={32} className="mx-auto text-foreground-muted mb-3" />
             <p className="text-foreground-muted">
-              You don&apos;t have any favorite quotes yet. Click the star on any quote to add it to your favorites!
+              You don&apos;t have any favorite quotes yet. Click the star on any
+              quote to add it to your favorites!
             </p>
           </div>
         )}
       </div>
 
       {/* Recent Quotes Section */}
-      {recentQuotes.length > 0 && (
+      {error ? (
+        <div className="bg-background-elevated border border-border rounded-xl p-8 text-center">
+          <BookOpen size={32} className="mx-auto text-danger mb-3" />
+          <p className="text-foreground-muted">
+            Unable to load recent quotes. Please try again later.
+          </p>
+        </div>
+      ) : recentQuotes && recentQuotes.length > 0 ? (
         <div>
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-xl font-semibold flex items-center gap-2">
@@ -317,15 +366,47 @@ function ProfileData({
             ))}
           </div>
         </div>
+      ) : (
+        <div className="bg-background-elevated border border-border rounded-xl p-8 text-center">
+          <BookOpen size={32} className="mx-auto text-foreground-muted mb-3" />
+          <p className="text-foreground-muted">
+            You don&apos;t have any recent quotes yet. Go capture some!
+          </p>
+        </div>
       )}
     </div>
   );
 }
 
 export function ProfileDataComponent(props: ProfileDataProps) {
+  const { error } = props;
+  console.log(error);
+
+  if (error) {
+    toast({
+      title: "Failed to load profile data",
+      description: "Please try again later.",
+      variant: "destructive",
+    });
+  }
   return (
     <QueryProvider>
       <ProfileData {...props} />
     </QueryProvider>
+  );
+}
+
+export function StatNotFound({
+  icon,
+  text,
+}: {
+  icon: React.ReactNode;
+  text: string;
+}) {
+  return (
+    <div className="text-center flex flex-col items-center gap-2">
+      {icon}
+      <p>{text}</p>
+    </div>
   );
 }
