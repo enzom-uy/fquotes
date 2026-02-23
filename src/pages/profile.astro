@@ -87,11 +87,11 @@ try {
           email: user.email,
           image: user.image || null,
         }}
-        initialQuoteCount={quoteCount ? quoteCount : undefined}
-        initialFavoriteQuotes={favoriteQuotes ? favoriteQuotes : undefined}
-        initialRecentQuotes={recentQuotes ? recentQuotes : undefined}
+        initialQuoteCount={error ? undefined : quoteCount}
+        initialFavoriteQuotes={error ? undefined : (favoriteQuotes.length > 0 ? favoriteQuotes : [])}
+        initialRecentQuotes={recentQuotes.length > 0 ? recentQuotes : []}
         userId={user.id}
-        error={error && error}
+        error={error}
       />
 
       <!-- Empty State -->
