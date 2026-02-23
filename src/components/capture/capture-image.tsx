@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useCallback } from "react";
 import {
   Camera,
   Upload,
@@ -111,7 +111,7 @@ const CaptureImageInner = () => {
     localStorage.setItem(STORAGE_KEY, ocrLanguage);
   }, [ocrLanguage]);
 
-  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileSelect = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
     if (files && files.length > 0) {
       Array.from(files).forEach((file) => {
@@ -131,13 +131,13 @@ const CaptureImageInner = () => {
       });
       e.target.value = "";
     }
-  };
+  }, []);
 
-  const handleRemoveImage = (id: string) => {
+  const handleRemoveImage = useCallback((id: string) => {
     setCapturedImages((prev) => prev.filter((img) => img.id !== id));
-  };
+  }, []);
 
-  const handleCropComplete = (croppedImage: string) => {
+  const handleCropComplete = useCallback((croppedImage: string) => {
     if (!croppingImageId) return;
     setCapturedImages((prev) =>
       prev.map((img) =>
@@ -147,7 +147,7 @@ const CaptureImageInner = () => {
       ),
     );
     setCroppingImageId(null);
-  };
+  }, [croppingImageId]);
 
   const handleProcess = async () => {
     setIsProcessing(true);

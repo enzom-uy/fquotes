@@ -39,7 +39,7 @@ export const EditableQuoteCard = ({
       <Textarea
         value={metadata.text}
         onChange={(e) => updateField("text", e.target.value)}
-        className="min-h-[100px] focus:min-h-[250px] transition-all duration-300 resize-none text-sm italic leading-relaxed bg-transparent border-none shadow-none p-0 focus-visible:ring-0 focus-visible:ring-offset-0 placeholder:not-italic"
+        className="min-h-[100px] focus:min-h-[250px] transition-all duration-300 resize-none text-sm italic leading-relaxed bg-transparent shadow-none p-0 placeholder:not-italic border border-border focus:border-primary"
         placeholder="Quote text..."
       />
 
