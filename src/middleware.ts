@@ -9,9 +9,7 @@ export const onRequest = defineMiddleware(async (context, next) => {
   try {
     const response = await fetch(
       `${import.meta.env.PUBLIC_BETTER_AUTH_URL}/api/auth/get-session`,
-      {
-        headers: { cookie },
-      },
+      { headers: { cookie } },
     );
     if (response.ok) {
       const data = await response.json();
