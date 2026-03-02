@@ -45,7 +45,6 @@ let recentQuotes: QuoteResponse[] = []
 let error = false
 
 try {
-    console.log('starting fetch.')
   const [countRes, favoritesRes, recentRes] = await Promise.all([
     fetch(`${BACKEND_URL}/quotes/${user.id}/count`, {
       headers: { cookie: cookieHeader },
@@ -57,8 +56,6 @@ try {
       headers: { cookie: cookieHeader },
     }),
   ])
-
-  console.log(countRes)
 
   if (countRes.ok) {
     quoteCount = await countRes.json()
