@@ -3,8 +3,6 @@ import react from "@astrojs/react";
 import tailwind from "@astrojs/tailwind";
 import netlify from "@astrojs/netlify";
 
-import netlify from "@astrojs/netlify";
-
 export default defineConfig({
   integrations: [
     react(),
@@ -13,7 +11,6 @@ export default defineConfig({
     }),
   ],
 
-  output: "static",
+  output: "server",
   adapter: netlify(),
 });
-
