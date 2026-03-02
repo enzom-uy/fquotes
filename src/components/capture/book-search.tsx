@@ -53,12 +53,6 @@ export const BookSearch = ({
   const { data: results = [], isFetching } = useBookSearch(debouncedQuery);
 
   const handleSelect = (book: BookResult) => {
-    console.log("📖 Book selected:", book);
-    console.log("   - title:", book.title);
-    console.log("   - authorName:", book.authorName);
-    console.log("   - bookId:", book.bookId);
-    console.log("   - openlibraryId:", book.openlibraryId);
-    console.log("   - coverUrl:", book.coverUrl);
     onSelect(book);
     setQuery("");
     setOpen(false);
@@ -95,7 +89,7 @@ export const BookSearch = ({
                 loading="lazy"
                 decoding="async"
                 onLoad={() => setImageLoaded(true)}
-                className={`h-[54px] w-[36px] flex-shrink-0 rounded object-cover transition-opacity ${imageLoaded ? 'opacity-100' : 'opacity-0 absolute'}`}
+                className={`h-[54px] w-[36px] flex-shrink-0 rounded object-cover transition-opacity ${imageLoaded ? "opacity-100" : "opacity-0 absolute"}`}
               />
             </>
           ) : (
@@ -131,8 +125,15 @@ export const BookSearch = ({
               value={query}
               onChange={handleInputChange}
               onFocus={handleInputFocus}
-              placeholder={selectedBook ? "Search for a different book..." : "Search for a book..."}
-              className={cn("pl-9 pr-9", error && "border-danger focus-visible:ring-danger")}
+              placeholder={
+                selectedBook
+                  ? "Search for a different book..."
+                  : "Search for a book..."
+              }
+              className={cn(
+                "pl-9 pr-9",
+                error && "border-danger focus-visible:ring-danger",
+              )}
             />
             {isFetching && (
               <Loader2 className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 animate-spin text-foreground-muted" />
@@ -181,13 +182,13 @@ export const BookSearch = ({
                       >
                         {book.coverUrl ? (
                           <div className="flex-shrink-0">
-                            <img 
-                              src={book.coverUrl} 
-                              height={50} 
-                              width={50} 
+                            <img
+                              src={book.coverUrl}
+                              height={50}
+                              width={50}
                               loading="lazy"
                               decoding="async"
-                              alt="" 
+                              alt=""
                               className="rounded bg-background-muted"
                             />
                           </div>
@@ -215,9 +216,7 @@ export const BookSearch = ({
         </PopoverContent>
       </Popover>
 
-      {error && (
-        <p className="mt-1 text-sm text-danger">{error}</p>
-      )}
+      {error && <p className="mt-1 text-sm text-danger">{error}</p>}
     </div>
   );
 };

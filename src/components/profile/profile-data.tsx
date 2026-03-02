@@ -1,9 +1,5 @@
 import { useState } from "react";
-import {
-  BookOpen,
-  Star,
-  Frown,
-} from "lucide-react";
+import { BookOpen, Star, Frown } from "lucide-react";
 import { useFavoriteToggle, MAX_FAVORITES } from "@/hooks/use-favorite-toggle";
 import { QueryProvider } from "../query-provider";
 import { toast } from "@/hooks/use-toast";
@@ -238,7 +234,6 @@ function ProfileData({
 
 export function ProfileDataComponent(props: ProfileDataProps) {
   const { error } = props;
-  console.log(error);
 
   if (error) {
     toast({

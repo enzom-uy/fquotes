@@ -1,9 +1,4 @@
-import {
-  useState,
-  useRef,
-  useEffect,
-  type KeyboardEvent,
-} from "react";
+import { useState, useRef, useEffect, type KeyboardEvent } from "react";
 import {
   Search,
   RotateCcw,
@@ -15,7 +10,10 @@ import {
 } from "lucide-react";
 import { useSearchQuotes } from "@/hooks/use-search-quotes";
 import { useDeleteQuotes } from "@/hooks/use-delete-quotes";
-import { useUpdateQuote, type UpdateQuotePayload } from "@/hooks/use-update-quote";
+import {
+  useUpdateQuote,
+  type UpdateQuotePayload,
+} from "@/hooks/use-update-quote";
 import { useFavoriteToggle, MAX_FAVORITES } from "@/hooks/use-favorite-toggle";
 import { QueryProvider } from "./query-provider";
 import {
@@ -35,7 +33,12 @@ import {
   DropdownMenuTrigger,
 } from "./ui/dropdown-menu";
 import { toast } from "@/hooks/use-toast";
-import { type QuotesManagerProps, type QuoteData, type PaginationInfo, type QuoteBook } from "./quotes-manager/types";
+import {
+  type QuotesManagerProps,
+  type QuoteData,
+  type PaginationInfo,
+  type QuoteBook,
+} from "./quotes-manager/types";
 import { QuoteCard } from "./quote-card";
 import { QuoteCardSkeleton } from "./quotes-manager/quote-card-skeleton";
 import { EmptyState } from "./quotes-manager/empty-state";
@@ -127,7 +130,9 @@ const QuotesManagerInner = ({
   }, [initialQuotes]);
 
   // --- Favorite toggle state ---
-  const [pendingFavoriteId, setPendingFavoriteId] = useState<string | null>(null);
+  const [pendingFavoriteId, setPendingFavoriteId] = useState<string | null>(
+    null,
+  );
   const favoriteCount = quotes.filter((q) => q.isFavorite).length;
   const canAddFavorite = favoriteCount < MAX_FAVORITES;
 
@@ -136,9 +141,7 @@ const QuotesManagerInner = ({
     onSuccess: (isFavorite, quoteId) => {
       setPendingFavoriteId(null);
       setQuotes((prev) =>
-        prev.map((q) =>
-          q.id === quoteId ? { ...q, isFavorite } : q
-        )
+        prev.map((q) => (q.id === quoteId ? { ...q, isFavorite } : q)),
       );
     },
     onError: () => {
@@ -300,11 +303,6 @@ const QuotesManagerInner = ({
       const newOpenlibraryId = editedFields.selectedBook.openlibraryId;
       const newCoverUrl = editedFields.selectedBook.coverUrl;
 
-      console.log("📚 Selected book data:", editedFields.selectedBook);
-      console.log("   - bookId:", newBookId);
-      console.log("   - openlibraryId:", newOpenlibraryId);
-      console.log("   - coverUrl:", newCoverUrl);
-
       if (newBookId) {
         payload.bookId = newBookId;
       } else if (newOpenlibraryId) {
@@ -314,8 +312,6 @@ const QuotesManagerInner = ({
         }
       }
     }
-
-    console.log("🚀 Final payload to send:", payload);
 
     if (Object.keys(payload).length === 0) {
       handleCancelEdit();
