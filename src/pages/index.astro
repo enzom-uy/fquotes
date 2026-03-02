@@ -1,7 +1,7 @@
 ---
 import Layout from '@/layouts/layout.astro'
-import { Logo } from '@/components/logo'
-import { IndexCards } from '@/components/index-cards'
+import Logo from '@/components/logo.astro'
+import IndexCards from '@/components/index-cards.astro'
 import { GoogleSignInButton } from '@/components/auth/google-sign-in-button'
 import { CaptureImage } from '@/components/capture/capture-image'
 
@@ -30,7 +30,7 @@ if (session && user) {
     </main>
   ) : (
     <div class="min-h-screen flex flex-col items-center gap-6 justify-center px-6">
-      <Logo client:load />
+      <Logo />
       <div class="flex flex-col items-center gap-2">
         <h1 class="text-4xl font-semibold">QuoteKeeper</h1>
         <p class="text-foreground-subtle text-xl mb-4">
@@ -42,9 +42,9 @@ if (session && user) {
         </p>
       </div>
 
-      <GoogleSignInButton client:load />
+      <GoogleSignInButton client:idle />
 
-      <IndexCards client:load />
+      <IndexCards />
     </div>
   )}
 </Layout>

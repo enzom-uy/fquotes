@@ -1,4 +1,5 @@
 ---
+import { ClientRouter } from 'astro:transitions'
 import '@/styles/globals.css'
 import Navbar from '@/components/navbar.astro'
 import { Toaster } from '@/components/ui/toaster'
@@ -25,10 +26,61 @@ const shouldShowNavbar = showNavbar && session && user
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <title>{title}</title>
+    <ClientRouter />
   </head>
   <body>
+    <!-- Navigation progress bar -->
+    <div id="progress-bar" transition:persist style="position:fixed;top:0;left:0;width:0%;height:3px;background:var(--color-primary);z-index:100;opacity:0;pointer-events:none;"></div>
+
     {shouldShowNavbar && <Navbar user={user} />}
     <slot />
-    <Toaster client:load />
+    <Toaster client:idle transition:persist />
+
+    <script is:inline>
+      // Guard against duplicate listeners (script re-runs on each page)
+      if (!window.__progressBarInit) {
+        window.__progressBarInit = true;
+        let raf = 0;
+        let width = 0;
+
+        function getBar() {
+          return document.getElementById('progress-bar');
+        }
+
+        function start() {
+          const bar = getBar();
+          if (!bar) return;
+          cancelAnimationFrame(raf);
+          width = 0;
+          bar.style.transition = 'none';
+          bar.style.width = '0%';
+          bar.style.opacity = '1';
+          bar.offsetWidth; // force reflow
+
+          function tick() {
+            width += (90 - width) * 0.03;
+            bar.style.width = width + '%';
+            if (width < 89) raf = requestAnimationFrame(tick);
+          }
+          raf = requestAnimationFrame(tick);
+        }
+
+        function finish() {
+          const bar = getBar();
+          if (!bar) return;
+          cancelAnimationFrame(raf);
+          bar.style.transition = 'width 150ms ease-out, opacity 250ms ease-out 200ms';
+          bar.style.width = '100%';
+          bar.style.opacity = '0';
+          width = 0;
+        }
+
+        document.addEventListener('astro:before-preparation', start);
+        document.addEventListener('astro:after-swap', finish);
+        document.addEventListener('astro:page-load', function() {
+          if (width > 0) finish();
+        });
+      }
+    </script>
   </body>
 </html>

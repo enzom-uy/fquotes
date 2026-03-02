@@ -1,0 +1,33 @@
+---
+const elements = [
+  {
+    icon: "📸",
+    title: "Capture",
+    description: "Use your camera to photograph text",
+  },
+  {
+    icon: "✂️",
+    title: "Crop",
+    description: "Select the exact fragment you want",
+  },
+  {
+    icon: "🤖",
+    title: "Recognize",
+    description: "Automatically extract the quotes",
+  },
+];
+---
+
+<div class="flex sm:flex-row flex-col gap-4">
+  {elements.map((element) => (
+    <div
+      class="bg-background-elevated flex flex-col items-center text-center p-4 rounded-lg border-border border gap-2"
+    >
+      <div class="flex flex-col gap-2">
+        <span class="text-3xl">{element.icon}</span>
+        <h2 class="font-semibold">{element.title}</h2>
+      </div>
+      <p class="text-sm md:max-w-[16ch]">{element.description}</p>
+    </div>
+  ))}
+</div>
