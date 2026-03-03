@@ -10,6 +10,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { t, type Locale } from "@/i18n";
 
 const OCR_LANGUAGES_LIST = [
   { code: "ara", name: "Arabic" },
@@ -43,7 +44,11 @@ const OCR_LANGUAGES_LIST = [
 const LANGUAGE_STORAGE_KEY = "fquotes-ocr-language";
 const DEFAULT_PUBLIC_KEY = "fquotes-default-public";
 
-export function QuotesSettings() {
+interface QuotesSettingsProps {
+  locale?: Locale;
+}
+
+export function QuotesSettings({ locale = "en" }: QuotesSettingsProps) {
   const [ocrLanguage, setOcrLanguage] = useState("spa");
   const [defaultIsPublic, setDefaultIsPublic] = useState(false);
 
@@ -72,18 +77,20 @@ export function QuotesSettings() {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Quotes</CardTitle>
+        <CardTitle>{t(locale, "settings.quotes.title")}</CardTitle>
       </CardHeader>
       <CardContent className="space-y-6">
         {/* Default Language */}
         <div>
           <label className="text-sm font-medium flex items-center gap-2 mb-3">
             <Globe size={16} />
-            Default OCR Language
+            {t(locale, "settings.quotes.defaultLanguage")}
           </label>
           <Select value={ocrLanguage} onValueChange={handleLanguageChange}>
             <SelectTrigger className="w-full md:w-64">
-              <SelectValue placeholder="Select language" />
+              <SelectValue
+                placeholder={t(locale, "settings.quotes.selectLanguage")}
+              />
             </SelectTrigger>
             <SelectContent>
               {OCR_LANGUAGES_LIST.map((lang) => (
@@ -94,14 +101,14 @@ export function QuotesSettings() {
             </SelectContent>
           </Select>
           <p className="text-xs text-foreground-muted mt-2">
-            This language will be selected by default when capturing quotes.
+            {t(locale, "settings.quotes.defaultLanguageHelp")}
           </p>
         </div>
 
         {/* Default Visibility */}
         <div>
           <label className="text-sm font-medium block mb-3">
-            Default Quote Visibility
+            {t(locale, "settings.quotes.defaultVisibility")}
           </label>
           <div className="flex gap-3">
             <button
@@ -115,7 +122,7 @@ export function QuotesSettings() {
               `}
             >
               <Globe2 size={18} />
-              <span>Public</span>
+              <span>{t(locale, "settings.quotes.public")}</span>
             </button>
             <button
               onClick={() => handleDefaultVisibilityChange(false)}
@@ -128,11 +135,15 @@ export function QuotesSettings() {
               `}
             >
               <Lock size={18} />
-              <span>Private</span>
+              <span>{t(locale, "settings.quotes.private")}</span>
             </button>
           </div>
           <p className="text-xs text-foreground-muted mt-2">
-            New quotes will be set as {defaultIsPublic ? "public" : "private"} by default.
+            {t(locale, "settings.quotes.defaultVisibilityHelp", {
+              visibility: defaultIsPublic
+                ? t(locale, "settings.quotes.public").toLowerCase()
+                : t(locale, "settings.quotes.private").toLowerCase(),
+            })}
           </p>
         </div>
       </CardContent>

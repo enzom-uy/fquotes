@@ -1,5 +1,11 @@
 import { authClient } from "@/lib/auth-client";
-export function GoogleSignInButton() {
+import { t, type Locale } from "@/i18n";
+
+export interface GoogleSignInButtonProps {
+  locale?: Locale;
+}
+
+export function GoogleSignInButton({ locale = "en" }: GoogleSignInButtonProps) {
   const handleLogin = async () => {
     await authClient.signIn.social({
       provider: "google",
@@ -12,7 +18,7 @@ export function GoogleSignInButton() {
       onClick={handleLogin}
       className="px-6 py-3 bg-blue-600 text-white rounded-lg"
     >
-      Sign in with Google
+      {t(locale, "common.signIn")} Google
     </button>
   );
 }

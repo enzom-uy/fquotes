@@ -1,0 +1,202 @@
+{
+  "common": {
+    "appName": "QuoteKeeper",
+    "signIn": "Sign In with",
+    "signOut": "Sign Out",
+    "save": "Save",
+    "cancel": "Cancel",
+    "delete": "Delete",
+    "edit": "Edit",
+    "close": "Close",
+    "loading": "Loading...",
+    "error": "Error",
+    "success": "Success"
+  },
+  "nav": {
+    "capture": "Capture",
+    "quotes": "My Quotes",
+    "profile": "Profile",
+    "settings": "Settings"
+  },
+  "home": {
+    "title": "QuoteKeeper",
+    "captureTitle": "Capture Quote - QuoteKeeper",
+    "tagline": "Capture and save your favorite quotes",
+    "description": "Take photos of text from books, crop the image, and automatically extract the quotes you want to remember. All from your browser.",
+    "features": {
+      "capture": {
+        "title": "Capture",
+        "description": "Use your camera to photograph text"
+      },
+      "crop": {
+        "title": "Crop",
+        "description": "Select the exact fragment you want"
+      },
+      "recognize": {
+        "title": "Recognize",
+        "description": "Automatically extract the quotes"
+      }
+    }
+  },
+  "quotes": {
+    "title": "My Quotes",
+    "search": "Search quotes...",
+    "filterByLanguage": "Filter by language",
+    "allLanguages": "All languages",
+    "filterByVisibility": "Filter by visibility",
+    "allVisibility": "All",
+    "public": "Public",
+    "private": "Private",
+    "favorites": "Favorites",
+    "noQuotes": "No quotes found",
+    "noQuotesDescription": "Start capturing quotes from your favorite books!",
+    "captureQuote": "Capture a Quote",
+    "showing": "Showing",
+    "of": "of",
+    "deleteAll": "Delete all quotes",
+    "confirmDeleteAll": "Are you sure you want to delete all your quotes? This action cannot be undone.",
+    "quotesDeleted": "All quotes deleted successfully"
+  },
+  "profile": {
+    "title": "Profile",
+    "stats": {
+      "totalQuotes": "Total Quotes",
+      "favoriteQuotes": "Favorite Quotes"
+    },
+    "sections": {
+      "favorites": "Favorite Quotes",
+      "recent": "Recent Quotes"
+    },
+    "noQuotes": "No quotes yet",
+    "noQuotesDescription": "Start capturing quotes from your favorite books!"
+  },
+  "settings": {
+    "title": "Settings",
+    "profile": {
+      "title": "Profile",
+      "name": "Name",
+      "nickname": "Nickname",
+      "email": "Email",
+      "profilePicture": "Profile Picture",
+      "changePicture": "Change picture",
+      "editPhoto": "Edit photo",
+      "editProfile": "Edit Profile",
+      "nicknameWarning": "You can only change your nickname every 30 days."
+    },
+    "quotes": {
+      "title": "Quotes",
+      "defaultLanguage": "Default OCR Language",
+      "defaultLanguageHelp": "This language will be selected by default when capturing quotes.",
+      "selectLanguage": "Select language",
+      "defaultVisibility": "Default Quote Visibility",
+      "defaultVisibilityHelp": "New quotes will be set as {visibility} by default.",
+      "public": "Public",
+      "private": "Private"
+    }
+  },
+  "createProfile": {
+    "title": "Create Your Profile",
+    "subtitle": "Complete your profile to get started with QuoteKeeper",
+    "profilePicture": "Profile Picture",
+    "profilePictureHelp": "Upload a profile picture (this is a placeholder for now)",
+    "email": "Email",
+    "emailHelp": "Your email from the authentication token",
+    "name": "Name",
+    "namePlaceholder": "Enter your name",
+    "nameHelp": "This will be your display name",
+    "nameMinLength": "Name must be at least 2 characters",
+    "nameMaxLength": "Name must be less than 50 characters",
+    "invalidEmail": "Invalid email address",
+    "submit": "Create Profile",
+    "creating": "Creating Profile...",
+    "createError": "Failed to create profile",
+    "networkError": "Network error. Please try again."
+  },
+  "capture": {
+    "title": "Capture a Quote",
+    "subtitle": "Take photos or upload images of text from books",
+    "processingImages": "Processing images...",
+    "ocrSuccess": "Text extracted successfully from {count} image(s)",
+    "ocrError": "Failed to extract text from images",
+    "ocrLanguage": "OCR Language",
+    "addingQuote": "Adding quote...",
+    "quoteAdded": "Quote added successfully!",
+    "quoteSaved": "Quote saved!",
+    "quoteError": "Failed to save quote",
+    "useCameraTitle": "Use Camera",
+    "useCameraDescription": "Take photos directly",
+    "uploadImagesTitle": "Upload Images",
+    "uploadImagesDescription": "Choose from gallery",
+    "tipsTitle": "💡 Tips for best results",
+    "tip1": "Ensure good lighting and minimal shadows",
+    "tip2": "Keep the camera steady and focus on the text",
+    "tip3": "Capture text at a straight angle when possible",
+    "tip4": "You can upload multiple images at once"
+  },
+  "quote": {
+    "by": "by",
+    "chapter": "Chapter",
+    "tags": "Tags",
+    "addTag": "Add tag",
+    "share": "Share",
+    "favorite": "Favorite",
+    "edit": "Edit",
+    "delete": "Delete",
+    "confirmDelete": "Are you sure you want to delete this quote?",
+    "quoteDeleted": "Quote deleted successfully",
+    "public": "Public",
+    "private": "Private"
+  },
+  "errors": {
+    "generic": "An error occurred. Please try again.",
+    "notFound": "Not found",
+    "unauthorized": "Unauthorized",
+    "serverError": "Server error. Please try again later."
+  },
+  "quotesManager": {
+    "collectionCount": "quote",
+    "collectionCountPlural": "quotes",
+    "inYourCollection": "in your collection",
+    "searchPlaceholder": "Search quotes, books, or authors...",
+    "clearSearch": "Clear search and show all quotes",
+    "actions": "Actions",
+    "deleteMultiple": "Delete multiple",
+    "cancelBulkDelete": "Cancel bulk delete",
+    "selectQuotesToDelete": "Select quotes to delete",
+    "quotesSelected": "selected",
+    "deleteSelected": "Delete selected",
+    "limitWarning": "Showing the maximum of 50 results. Try refining your search for more specific results.",
+    "found": "Found",
+    "result": "result",
+    "results": "results",
+    "for": "for",
+    "deleteQuote": "Delete quote?",
+    "deleteQuotes": "Delete {count} quotes?",
+    "deleteConfirmation": "This action is irreversible. The quote will be permanently deleted.",
+    "deleteConfirmationPlural": "This action is irreversible. The selected quotes will be permanently deleted.",
+    "deleting": "Deleting...",
+    "quoteDeleted": "Quote deleted",
+    "quotesDeletedCount": "{count} quotes deleted",
+    "quoteUpdated": "Quote updated",
+    "deleteError": "Failed to delete quotes. Please try again.",
+    "updateError": "Failed to update quote. Please try again.",
+    "maxFavoritesReached": "Maximum favorites reached",
+    "maxFavoritesDescription": "You can only have {max} favorite quotes. Remove one first.",
+    "noResults": "No results found",
+    "noResultsDescription": "Try a different search term",
+    "noQuotes": "No quotes yet",
+    "noQuotesDescription": "Start capturing quotes from your favorite books!",
+    "signingOut": "Signing out..."
+  },
+  "profilePage": {
+    "totalQuotes": "Total Quotes",
+    "favoriteQuotes": "Favorite Quotes",
+    "favoritesSection": "Favorite Quotes",
+    "recentSection": "Recent Quotes",
+    "noQuotes": "No quotes yet",
+    "noQuotesDescription": "Start capturing quotes from your favorite books!",
+    "noFavorites": "No favorite quotes yet",
+    "noFavoritesDescription": "Mark quotes as favorites to see them here",
+    "loadError": "Unable to load profile data"
+  }
+}

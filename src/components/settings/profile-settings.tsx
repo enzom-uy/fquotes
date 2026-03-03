@@ -4,16 +4,21 @@ import { useState } from "react";
 import { User, Edit2, Camera } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { t, type Locale } from "@/i18n";
 
-interface ProfileSettingsProps {
+export interface ProfileSettingsProps {
   user: {
     name: string;
     email: string;
     image: string | null;
   };
+  locale?: Locale;
 }
 
-export function ProfileSettings({ user }: ProfileSettingsProps) {
+export function ProfileSettings({
+  user,
+  locale = "en",
+}: ProfileSettingsProps) {
   const [nickname, setNickname] = useState(user.name);
   const [isEditingNickname, setIsEditingNickname] = useState(false);
   const [isEditingPhoto, setIsEditingPhoto] = useState(false);
@@ -21,7 +26,7 @@ export function ProfileSettings({ user }: ProfileSettingsProps) {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Profile</CardTitle>
+        <CardTitle>{t(locale, "settings.profile.title")}</CardTitle>
       </CardHeader>
       <CardContent>
         <div className="flex flex-col items-center md:items-start gap-6">
@@ -42,7 +47,7 @@ export function ProfileSettings({ user }: ProfileSettingsProps) {
             <button
               onClick={() => setIsEditingPhoto(!isEditingPhoto)}
               className="absolute bottom-0 right-0 p-2 bg-primary rounded-full text-background hover:opacity-90 transition-opacity"
-              title="Edit photo"
+              title={t(locale, "settings.profile.editPhoto")}
             >
               <Camera size={16} />
             </button>
@@ -51,13 +56,15 @@ export function ProfileSettings({ user }: ProfileSettingsProps) {
           {/* Nickname */}
           <div className="w-full max-w-sm">
             <div className="flex items-center justify-between mb-2">
-              <label className="text-sm font-medium">Nickname</label>
+              <label className="text-sm font-medium">
+                {t(locale, "settings.profile.nickname")}
+              </label>
               <button
                 onClick={() => setIsEditingNickname(!isEditingNickname)}
                 className="flex items-center gap-1 text-sm text-primary hover:underline"
               >
                 <Edit2 size={14} />
-                Edit
+                {t(locale, "common.edit")}
               </button>
             </div>
             
@@ -70,7 +77,7 @@ export function ProfileSettings({ user }: ProfileSettingsProps) {
                   className="flex-1 bg-background border border-input rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
                 />
                 <Button size="sm" onClick={() => setIsEditingNickname(false)}>
-                  Save
+                  {t(locale, "common.save")}
                 </Button>
               </div>
             ) : (
@@ -78,13 +85,15 @@ export function ProfileSettings({ user }: ProfileSettingsProps) {
             )}
             
             <p className="text-xs text-foreground-muted mt-1">
-              You can only change your nickname every 30 days.
+              {t(locale, "settings.profile.nicknameWarning")}
             </p>
           </div>
 
           {/* Email (read-only) */}
           <div className="w-full max-w-sm">
-            <label className="text-sm font-medium block mb-2">Email</label>
+            <label className="text-sm font-medium block mb-2">
+              {t(locale, "settings.profile.email")}
+            </label>
             <p className="text-foreground-muted">{user.email}</p>
           </div>
         </div>

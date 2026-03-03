@@ -1,3 +1,5 @@
+import type { Locale } from "@/i18n";
+
 export interface QuoteBook {
   id?: string;
   title: string;
@@ -31,4 +33,5 @@ export interface QuotesManagerProps {
   quotes: QuoteData[];
   pagination: PaginationInfo;
   fetchError: string;
+  locale?: Locale;
 }

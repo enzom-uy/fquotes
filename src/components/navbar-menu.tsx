@@ -8,17 +8,20 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { t, getLocalizedPath, type Locale } from "@/i18n";
 
 interface NavbarMenuProps {
   currentPath: string;
   userName?: string;
   userImage?: string | null;
+  locale?: Locale;
 }
 
 export const NavbarMenu = ({
   currentPath,
   userName,
   userImage,
+  locale = "en",
 }: NavbarMenuProps) => {
   const [isSigningOut, setIsSigningOut] = useState(false);
 
@@ -28,7 +31,7 @@ export const NavbarMenu = ({
       await authClient.signOut({
         fetchOptions: {
           onSuccess: () => {
-            window.location.href = "/";
+            window.location.href = getLocalizedPath("/", locale);
           },
         },
       });
@@ -39,8 +42,16 @@ export const NavbarMenu = ({
   };
 
   const navItems = [
-    { href: "/", label: "Capture", icon: Camera },
-    { href: "/quotes", label: "My Quotes", icon: BookMarked },
+    { 
+      href: getLocalizedPath("/", locale), 
+      label: t(locale, "nav.capture"), 
+      icon: Camera 
+    },
+    { 
+      href: getLocalizedPath("/quotes", locale), 
+      label: t(locale, "nav.quotes"), 
+      icon: BookMarked 
+    },
   ];
 
   return (
@@ -87,7 +98,7 @@ export const NavbarMenu = ({
 
         <DropdownMenuItem asChild>
           <a
-            href="/profile"
+            href={getLocalizedPath("/profile", locale)}
             className="flex items-center gap-2 cursor-pointer"
           >
             {userImage ? (
@@ -100,7 +111,7 @@ export const NavbarMenu = ({
             ) : (
               <User size={16} />
             )}
-            {userName || "Profile"}
+            {userName || t(locale, "nav.profile")}
           </a>
         </DropdownMenuItem>
 
@@ -112,7 +123,7 @@ export const NavbarMenu = ({
           className="text-danger focus:text-danger cursor-pointer"
         >
           <LogOut size={16} className="mr-2" />
-          {isSigningOut ? "Signing out..." : "Sign Out"}
+          {isSigningOut ? t(locale, "quotesManager.signingOut") : t(locale, "common.signOut")}
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>

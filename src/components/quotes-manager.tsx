@@ -44,6 +44,7 @@ import { QuoteCardSkeleton } from "./quotes-manager/quote-card-skeleton";
 import { EmptyState } from "./quotes-manager/empty-state";
 import { QuotesPagination } from "./quotes-manager/quotes-pagination";
 import type { BookResult } from "./capture/book-search";
+import { t, type Locale } from "@/i18n";
 
 export const QuotesManager = (props: QuotesManagerProps) => (
   <QueryProvider>
@@ -56,6 +57,7 @@ const QuotesManagerInner = ({
   quotes: initialQuotes,
   pagination,
   fetchError,
+  locale = "en",
 }: QuotesManagerProps) => {
   // --- Search state ---
   const [inputValue, setInputValue] = useState("");
@@ -152,8 +154,8 @@ const QuotesManagerInner = ({
   const handleToggleFavorite = (quoteId: string, newIsFavorite: boolean) => {
     if (newIsFavorite && !canAddFavorite) {
       toast({
-        title: "Maximum favorites reached",
-        description: `You can only have ${MAX_FAVORITES} favorite quotes. Remove one first.`,
+        title: t(locale, "quotesManager.maxFavoritesReached"),
+        description: t(locale, "quotesManager.maxFavoritesDescription", { max: MAX_FAVORITES.toString() }),
         variant: "destructive",
       });
       return;
@@ -202,8 +204,8 @@ const QuotesManagerInner = ({
           toast({
             title:
               idsToDelete.length === 1
-                ? "Quote deleted"
-                : `${idsToDelete.length} quotes deleted`,
+                ? t(locale, "quotesManager.quoteDeleted")
+                : t(locale, "quotesManager.quotesDeletedCount", { count: idsToDelete.length.toString() }),
           });
           if (isSearchActive) {
             const q = activeQuery;
@@ -213,8 +215,8 @@ const QuotesManagerInner = ({
         },
         onError: () => {
           toast({
-            title: "Error",
-            description: "Failed to delete quotes. Please try again.",
+            title: t(locale, "common.error"),
+            description: t(locale, "quotesManager.deleteError"),
             variant: "destructive",
           });
           setDeleteTarget(null);
@@ -351,12 +353,12 @@ const QuotesManagerInner = ({
 
           setEditingQuoteId(null);
           setEditedFields(null);
-          toast({ title: "Quote updated" });
+          toast({ title: t(locale, "quotesManager.quoteUpdated") });
         },
         onError: () => {
           toast({
-            title: "Error",
-            description: "Failed to update quote. Please try again.",
+            title: t(locale, "common.error"),
+            description: t(locale, "quotesManager.updateError"),
             variant: "destructive",
           });
         },
@@ -376,7 +378,7 @@ const QuotesManagerInner = ({
     <div className="flex flex-col gap-4">
       {/* Collection count */}
       <p className="text-foreground-muted -mt-2">
-        {adjustedTotal} quote{adjustedTotal !== 1 ? "s" : ""} in your collection
+        {adjustedTotal} {adjustedTotal !== 1 ? t(locale, "quotesManager.collectionCountPlural") : t(locale, "quotesManager.collectionCount")} {t(locale, "quotesManager.inYourCollection")}
       </p>
 
       {/* Search + Actions bar */}
@@ -392,7 +394,7 @@ const QuotesManagerInner = ({
             value={inputValue}
             onChange={(e) => setInputValue(e.target.value)}
             onKeyDown={handleKeyDown}
-            placeholder="Search quotes, books, or authors..."
+            placeholder={t(locale, "quotesManager.searchPlaceholder")}
             className="w-full pl-10 pr-4 py-3 bg-background-elevated border border-border rounded-lg text-foreground placeholder:text-foreground-muted focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-all"
           />
         </div>
@@ -400,7 +402,7 @@ const QuotesManagerInner = ({
           <button
             onClick={handleReset}
             className="flex-shrink-0 w-12 h-12 flex items-center justify-center rounded-lg border border-border bg-background-elevated text-foreground-muted hover:bg-background-muted hover:text-foreground hover:border-primary transition-all"
-            title="Clear search and show all quotes"
+            title={t(locale, "quotesManager.clearSearch")}
           >
             <RotateCcw size={18} />
           </button>
@@ -411,7 +413,7 @@ const QuotesManagerInner = ({
           <DropdownMenuTrigger asChild>
             <button
               className="flex-shrink-0 w-12 h-12 flex items-center justify-center rounded-lg border border-border bg-background-elevated text-foreground-muted hover:bg-background-muted hover:text-foreground hover:border-primary transition-all"
-              title="Actions"
+              title={t(locale, "quotesManager.actions")}
             >
               <MoreHorizontal size={18} />
             </button>
@@ -422,7 +424,7 @@ const QuotesManagerInner = ({
               className="text-danger focus:text-danger"
             >
               <Trash2 size={16} />
-              {bulkMode ? "Cancel bulk delete" : "Delete multiple"}
+              {bulkMode ? t(locale, "quotesManager.cancelBulkDelete") : t(locale, "quotesManager.deleteMultiple")}
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
@@ -435,8 +437,8 @@ const QuotesManagerInner = ({
             <Trash2 size={16} className="flex-shrink-0" />
             <span>
               {selectedIds.size === 0
-                ? "Select quotes to delete"
-                : `${selectedIds.size} quote${selectedIds.size !== 1 ? "s" : ""} selected`}
+                ? t(locale, "quotesManager.selectQuotesToDelete")
+                : `${selectedIds.size} ${selectedIds.size !== 1 ? t(locale, "quotesManager.collectionCountPlural") : t(locale, "quotesManager.collectionCount")} ${t(locale, "quotesManager.quotesSelected")}`}
             </span>
           </div>
           <div className="flex items-center gap-2">
@@ -445,12 +447,12 @@ const QuotesManagerInner = ({
               disabled={selectedIds.size === 0}
               className="px-4 py-1.5 text-sm font-medium bg-danger text-white rounded-lg hover:opacity-90 disabled:opacity-40 disabled:cursor-not-allowed transition-all"
             >
-              Delete selected
+              {t(locale, "quotesManager.deleteSelected")}
             </button>
             <button
               onClick={toggleBulkMode}
               className="p-1.5 text-foreground-muted hover:text-foreground rounded-lg transition-colors"
-              title="Cancel"
+              title={t(locale, "common.cancel")}
             >
               <X size={16} />
             </button>
@@ -463,8 +465,7 @@ const QuotesManagerInner = ({
         <div className="flex items-center gap-2 text-sm text-warning bg-warning/10 border border-warning/30 rounded-lg px-3 py-2">
           <AlertTriangle size={16} className="flex-shrink-0" />
           <span>
-            Showing the maximum of 50 results. Try refining your search for more
-            specific results.
+            {t(locale, "quotesManager.limitWarning")}
           </span>
         </div>
       )}
@@ -475,15 +476,14 @@ const QuotesManagerInner = ({
         searchResults &&
         searchResults.length > 0 && (
           <p className="text-sm text-foreground-muted">
-            Found{" "}
+            {t(locale, "quotesManager.found")}{" "}
             <span className="font-medium text-foreground">
               {searchResults.filter((q) => !deletedIds.has(q.id)).length}
             </span>{" "}
-            result
             {searchResults.filter((q) => !deletedIds.has(q.id)).length !== 1
-              ? "s"
-              : ""}{" "}
-            for &ldquo;{activeQuery}&rdquo;
+              ? t(locale, "quotesManager.results")
+              : t(locale, "quotesManager.result")}{" "}
+            {t(locale, "quotesManager.for")} &ldquo;{activeQuery}&rdquo;
           </p>
         )}
 
@@ -499,11 +499,11 @@ const QuotesManagerInner = ({
         !isFetching &&
         searchResults &&
         searchResults.length === 0 && (
-          <EmptyState type="no-results" query={activeQuery} />
+          <EmptyState type="no-results" query={activeQuery} locale={locale} />
         )}
 
       {!isSearchActive && !fetchError && quotes.length === 0 && (
-        <EmptyState type="no-quotes" />
+        <EmptyState type="no-quotes" locale={locale} />
       )}
 
       {/* Skeleton loaders while searching */}
@@ -538,6 +538,7 @@ const QuotesManagerInner = ({
               onToggleFavorite={handleToggleFavorite}
               isTogglingFavorite={pendingFavoriteId === quote.id}
               canAddFavorite={canAddFavorite}
+              locale={locale}
             />
           ))}
         </div>
@@ -563,18 +564,18 @@ const QuotesManagerInner = ({
           <AlertDialogHeader>
             <AlertDialogTitle>
               {dialogCount === 1
-                ? "Delete quote?"
-                : `Delete ${dialogCount} quotes?`}
+                ? t(locale, "quotesManager.deleteQuote")
+                : t(locale, "quotesManager.deleteQuotes", { count: dialogCount.toString() })}
             </AlertDialogTitle>
             <AlertDialogDescription>
-              This action is irreversible. The{" "}
-              {dialogCount === 1 ? "quote" : "selected quotes"} will be
-              permanently deleted.
+              {dialogCount === 1 
+                ? t(locale, "quotesManager.deleteConfirmation")
+                : t(locale, "quotesManager.deleteConfirmationPlural")}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel disabled={deleteMutation.isPending}>
-              Cancel
+              {t(locale, "common.cancel")}
             </AlertDialogCancel>
             <AlertDialogAction
               onClick={(e) => {
@@ -587,10 +588,10 @@ const QuotesManagerInner = ({
               {deleteMutation.isPending ? (
                 <>
                   <Loader2 size={16} className="animate-spin mr-2" />
-                  Deleting...
+                  {t(locale, "quotesManager.deleting")}
                 </>
               ) : (
-                "Delete"
+                t(locale, "common.delete")
               )}
             </AlertDialogAction>
           </AlertDialogFooter>

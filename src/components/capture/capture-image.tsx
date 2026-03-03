@@ -29,6 +29,7 @@ import { QuoteSkeletons } from "./quote-skeleton";
 import { useSaveQuotes, buildQuotePayloads } from "@/hooks/use-save-quotes";
 import { QueryProvider } from "../query-provider";
 import { ImageCropper } from "./image-cropper";
+import { t, type Locale } from "@/i18n";
 
 interface CapturedImage {
   id: string;
@@ -68,15 +69,19 @@ const OCR_LANGUAGES = [
 const STORAGE_KEY = "fquotes-ocr-language";
 const DEFAULT_PUBLIC_KEY = "fquotes-default-public";
 
-export const CaptureImage = () => {
+export interface CaptureImageProps {
+  locale?: Locale;
+}
+
+export const CaptureImage = ({ locale = "en" }: CaptureImageProps) => {
   return (
     <QueryProvider>
-      <CaptureImageInner />
+      <CaptureImageInner locale={locale} />
     </QueryProvider>
   );
 };
 
-const CaptureImageInner = () => {
+const CaptureImageInner = ({ locale = "en" }: CaptureImageProps) => {
   const [capturedImages, setCapturedImages] = useState<CapturedImage[]>([]);
   const [isProcessing, setIsProcessing] = useState(false);
   const [processingProgress, setProcessingProgress] = useState({
@@ -228,7 +233,7 @@ const CaptureImageInner = () => {
 
       // Show success toast
       toast({
-        title: "Processing complete!",
+        title: t(locale, "capture.processingComplete"),
         description: `Successfully extracted text from ${capturedImages.length} image${capturedImages.length !== 1 ? "s" : ""}.`,
         variant: "success",
       });
@@ -238,7 +243,7 @@ const CaptureImageInner = () => {
 
       // Show error toast
       toast({
-        title: "Processing failed",
+        title: t(locale, "capture.processingFailed"),
         description: `Error processing images: ${error}`,
         variant: "destructive",
       });
@@ -267,8 +272,8 @@ const CaptureImageInner = () => {
   const handleSaveQuotes = async () => {
     if (!session?.user?.id) {
       toast({
-        title: "Not authenticated",
-        description: "Please sign in to save quotes.",
+        title: t(locale, "capture.notAuthenticated"),
+        description: t(locale, "capture.signInRequired"),
         variant: "destructive",
       });
       return;
@@ -280,8 +285,8 @@ const CaptureImageInner = () => {
     const emptyQuotes = quotesMetadata.filter((q) => !q.text.trim());
     if (emptyQuotes.length > 0) {
       toast({
-        title: "Empty quotes",
-        description: "Please make sure all quotes have text before saving.",
+        title: t(locale, "capture.emptyQuotes"),
+        description: t(locale, "capture.emptyQuotesDesc"),
         variant: "destructive",
       });
       return;
@@ -289,13 +294,13 @@ const CaptureImageInner = () => {
 
     // Validate that all quotes have a book selected
     const newBookErrors = quotesMetadata.map((_, index) =>
-      selectedBooks[index] ? null : "Please select a book for this quote.",
+      selectedBooks[index] ? null : t(locale, "capture.missingBook"),
     );
     if (newBookErrors.some((e) => e !== null)) {
       setBookErrors(newBookErrors);
       toast({
-        title: "Missing book selection",
-        description: "Please select a book for each quote before saving.",
+        title: t(locale, "capture.missingBookSelection"),
+        description: t(locale, "capture.missingBookDesc"),
         variant: "destructive",
       });
       return;
@@ -310,7 +315,7 @@ const CaptureImageInner = () => {
     saveQuotesMutation.mutate(payloads, {
       onSuccess: () => {
         toast({
-          title: "Quotes saved!",
+          title: t(locale, "capture.quotesSaved"),
           description: `Successfully saved ${quotesMetadata.length} quote${quotesMetadata.length !== 1 ? "s" : ""}.`,
           variant: "success",
         });
@@ -318,7 +323,7 @@ const CaptureImageInner = () => {
       },
       onError: (error) => {
         toast({
-          title: "Failed to save",
+          title: t(locale, "capture.failedToSave"),
           description: `Error saving quotes: ${error.message}`,
           variant: "destructive",
         });
@@ -353,7 +358,9 @@ const CaptureImageInner = () => {
           <div className="flex items-center justify-between">
             <div>
               <h2 className="text-2xl font-bold">
-                {quotesMetadata.length > 0 ? "Extracted Quotes" : "Preview"}
+                {quotesMetadata.length > 0
+                  ? t(locale, "capture.extractedQuotes")
+                  : t(locale, "capture.preview")}
               </h2>
               <p className="text-sm text-foreground-muted">
                 {capturedImages.length} image
@@ -364,7 +371,7 @@ const CaptureImageInner = () => {
               <button
                 onClick={handleClearAll}
                 className="p-2 rounded-lg hover:bg-background-muted transition-colors"
-                title="Clear all images"
+                title={t(locale, "capture.clearAll")}
               >
                 <X size={20} />
               </button>
@@ -393,14 +400,14 @@ const CaptureImageInner = () => {
                     <button
                       onClick={() => setCroppingImageId(image.id)}
                       className="p-1.5 bg-background/80 backdrop-blur-sm hover:bg-primary text-foreground hover:text-white rounded-lg transition-all"
-                      title="Crop image"
+                      title={t(locale, "capture.cropImage")}
                     >
                       <Crop size={14} />
                     </button>
                     <button
                       onClick={() => handleRemoveImage(image.id)}
                       className="p-1.5 bg-background/80 backdrop-blur-sm hover:bg-danger/90 text-danger hover:text-background border border-border hover:border-danger rounded-lg transition-all"
-                      title="Remove image"
+                      title={t(locale, "capture.removeImage")}
                     >
                       <Trash2 size={14} />
                     </button>
@@ -429,7 +436,7 @@ const CaptureImageInner = () => {
             <Globe size={18} className="text-foreground-muted" />
             <Select value={ocrLanguage} onValueChange={setOcrLanguage}>
               <SelectTrigger className="flex-1">
-                <SelectValue placeholder="Select language" />
+                <SelectValue placeholder={t(locale, "capture.selectLanguage")} />
               </SelectTrigger>
               <SelectContent>
                 {OCR_LANGUAGES.map((lang) => (
@@ -458,7 +465,7 @@ const CaptureImageInner = () => {
                 ) : (
                   <>
                     <Check size={20} />
-                    Extract Text
+                    {t(locale, "capture.extractText")}
                   </>
                 )}
               </Button>
@@ -577,7 +584,7 @@ const CaptureImageInner = () => {
             <div className="bg-background-elevated border border-background-muted rounded-lg p-4">
               <p className="text-sm text-foreground-muted">
                 <span className="text-primary font-semibold">Next step:</span>{" "}
-                Click "Extract Text" to process{" "}
+                {t(locale, "capture.clickExtract")}{" "}
                 {capturedImages.length > 1 ? "all images" : "the image"} with
                 OCR.
               </p>
@@ -626,9 +633,9 @@ const CaptureImageInner = () => {
       <div className="flex flex-col gap-6">
         {/* Title */}
         <div className="text-center">
-          <h2 className="text-3xl font-bold mb-2">Capture a Quote</h2>
+          <h2 className="text-3xl font-bold mb-2">{t(locale, "capture.title")}</h2>
           <p className="text-foreground-muted">
-            Take photos or upload images of text from books
+            {t(locale, "capture.subtitle")}
           </p>
         </div>
 
@@ -643,9 +650,9 @@ const CaptureImageInner = () => {
               <Camera size={32} className="text-primary" />
             </div>
             <div className="text-center">
-              <h3 className="text-lg font-semibold mb-1">Use Camera</h3>
+              <h3 className="text-lg font-semibold mb-1">{t(locale, "capture.useCameraTitle")}</h3>
               <p className="text-sm text-foreground-subtle">
-                Take photos directly
+                {t(locale, "capture.useCameraDescription")}
               </p>
             </div>
           </label>
@@ -659,9 +666,9 @@ const CaptureImageInner = () => {
               <Upload size={32} className="text-accent" />
             </div>
             <div className="text-center">
-              <h3 className="text-lg font-semibold mb-1">Upload Images</h3>
+              <h3 className="text-lg font-semibold mb-1">{t(locale, "capture.uploadImagesTitle")}</h3>
               <p className="text-sm text-foreground-subtle">
-                Choose from gallery
+                {t(locale, "capture.uploadImagesDescription")}
               </p>
             </div>
           </label>
@@ -670,24 +677,24 @@ const CaptureImageInner = () => {
         {/* Tips */}
         <div className="mt-12 bg-background-elevated border border-background-muted rounded-lg p-6">
           <h3 className="text-sm font-semibold text-primary mb-3">
-            💡 Tips for best results
+            {t(locale, "capture.tipsTitle")}
           </h3>
           <ul className="flex flex-col gap-2 text-sm text-foreground-muted">
             <li className="flex items-start gap-2">
               <span className="text-success mt-0.5">•</span>
-              <span>Ensure good lighting and minimal shadows</span>
+              <span>{t(locale, "capture.tip1")}</span>
             </li>
             <li className="flex items-start gap-2">
               <span className="text-success mt-0.5">•</span>
-              <span>Keep the camera steady and focus on the text</span>
+              <span>{t(locale, "capture.tip2")}</span>
             </li>
             <li className="flex items-start gap-2">
               <span className="text-success mt-0.5">•</span>
-              <span>Capture text at a straight angle when possible</span>
+              <span>{t(locale, "capture.tip3")}</span>
             </li>
             <li className="flex items-start gap-2">
               <span className="text-success mt-0.5">•</span>
-              <span>You can upload multiple images at once</span>
+              <span>{t(locale, "capture.tip4")}</span>
             </li>
           </ul>
         </div>

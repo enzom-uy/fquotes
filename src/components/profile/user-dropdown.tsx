@@ -8,16 +8,18 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { User, BookMarked, LogOut, ChevronDown, Settings } from "lucide-react";
 import { signOut } from "@/lib/auth-client";
+import { t, getLocalizedPath, type Locale } from "@/i18n";
 
 interface UserDropdownProps {
   userName: string;
   userImage?: string | null;
+  locale?: Locale;
 }
 
-export const UserDropdown = ({ userName, userImage }: UserDropdownProps) => {
+export const UserDropdown = ({ userName, userImage, locale = "en" }: UserDropdownProps) => {
   const handleSignOut = async () => {
     await signOut();
-    window.location.href = "/";
+    window.location.href = getLocalizedPath("/", locale);
   };
 
   return (
@@ -50,21 +52,21 @@ export const UserDropdown = ({ userName, userImage }: UserDropdownProps) => {
         className="w-56 bg-background-elevated/95 backdrop-blur-md border-border z-[60]"
       >
         <DropdownMenuItem asChild>
-          <a href="/profile" className="flex items-center gap-2">
+          <a href={getLocalizedPath("/profile", locale)} className="flex items-center gap-2">
             <User size={16} />
-            <span>Profile</span>
+            <span>{t(locale, "nav.profile")}</span>
           </a>
         </DropdownMenuItem>
         <DropdownMenuItem asChild>
-          <a href="/quotes" className="flex items-center gap-2">
+          <a href={getLocalizedPath("/quotes", locale)} className="flex items-center gap-2">
             <BookMarked size={16} />
-            <span>My Quotes</span>
+            <span>{t(locale, "nav.quotes")}</span>
           </a>
         </DropdownMenuItem>
         <DropdownMenuItem asChild>
-          <a href="/settings" className="flex items-center gap-2">
+          <a href={getLocalizedPath("/settings", locale)} className="flex items-center gap-2">
             <Settings size={16} />
-            <span>Settings</span>
+            <span>{t(locale, "nav.settings")}</span>
           </a>
         </DropdownMenuItem>
         <DropdownMenuSeparator />
@@ -73,7 +75,7 @@ export const UserDropdown = ({ userName, userImage }: UserDropdownProps) => {
           className="flex items-center gap-2 text-danger hover:text-danger focus:text-danger"
         >
           <LogOut size={16} />
-          <span>Sign Out</span>
+          <span>{t(locale, "common.signOut")}</span>
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>

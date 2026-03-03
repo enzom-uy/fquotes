@@ -17,38 +17,56 @@ import {
 import { useUpdateProfile } from "@/hooks/use-update-profile";
 import { ApiError } from "@/lib/api";
 import { QueryProvider } from "../query-provider";
+import { t, type Locale } from "@/i18n";
 
-const profileFormSchema = z.object({
-  image: z.string().optional(),
-  email: z.string().email("Invalid email address"),
-  name: z
-    .string()
-    .min(2, "Name must be at least 2 characters")
-    .max(50, "Name must be less than 50 characters"),
-});
+const getProfileFormSchema = (locale: Locale) =>
+  z.object({
+    image: z.string().optional(),
+    email: z.string().email(t(locale, "createProfile.invalidEmail")),
+    name: z
+      .string()
+      .min(2, t(locale, "createProfile.nameMinLength"))
+      .max(50, t(locale, "createProfile.nameMaxLength")),
+  });
 
-type ProfileFormValues = z.infer<typeof profileFormSchema>;
+type ProfileFormValues = z.infer<ReturnType<typeof getProfileFormSchema>>;
 
-interface Props {
+export interface CreateProfileFormProps {
   email: string;
   name: string;
   profilePic?: string;
+  locale?: Locale;
 }
 
-export const CreateProfileForm = ({ email, name, profilePic }: Props) => {
+export const CreateProfileForm = ({
+  email,
+  name,
+  profilePic,
+  locale = "en",
+}: CreateProfileFormProps) => {
   return (
     <QueryProvider>
-      <CreateProfileFormInner email={email} name={name} profilePic={profilePic} />
+      <CreateProfileFormInner
+        email={email}
+        name={name}
+        profilePic={profilePic}
+        locale={locale}
+      />
     </QueryProvider>
   );
 };
 
-const CreateProfileFormInner = ({ email, name, profilePic }: Props) => {
+const CreateProfileFormInner = ({
+  email,
+  name,
+  profilePic,
+  locale = "en",
+}: CreateProfileFormProps) => {
   const [error, setError] = useState<string | null>(null);
   const updateProfile = useUpdateProfile();
 
   const form = useForm<ProfileFormValues>({
-    resolver: zodResolver(profileFormSchema),
+    resolver: zodResolver(getProfileFormSchema(locale)),
     defaultValues: {
       image: profilePic,
       email: email,
@@ -65,9 +83,9 @@ const CreateProfileFormInner = ({ email, name, profilePic }: Props) => {
       },
       onError: (err) => {
         if (err instanceof ApiError) {
-          setError(err.message || "Failed to create profile");
+          setError(err.message || t(locale, "createProfile.createError"));
         } else {
-          setError("Network error. Please try again.");
+          setError(t(locale, "createProfile.networkError"));
         }
       },
     });
@@ -90,12 +108,12 @@ const CreateProfileFormInner = ({ email, name, profilePic }: Props) => {
           name="image"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Profile Picture</FormLabel>
+              <FormLabel>{t(locale, "createProfile.profilePicture")}</FormLabel>
               <FormControl>
                 <FileUpload value={field.value} disabled={updateProfile.isPending} />
               </FormControl>
               <FormDescription>
-                Upload a profile picture (this is a placeholder for now)
+                {t(locale, "createProfile.profilePictureHelp")}
               </FormDescription>
               <FormMessage />
             </FormItem>
@@ -107,12 +125,12 @@ const CreateProfileFormInner = ({ email, name, profilePic }: Props) => {
           name="email"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Email</FormLabel>
+              <FormLabel>{t(locale, "createProfile.email")}</FormLabel>
               <FormControl>
                 <Input {...field} type="email" disabled value={email} />
               </FormControl>
               <FormDescription>
-                Your email from the authentication token
+                {t(locale, "createProfile.emailHelp")}
               </FormDescription>
               <FormMessage />
             </FormItem>
@@ -124,15 +142,17 @@ const CreateProfileFormInner = ({ email, name, profilePic }: Props) => {
           name="name"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Name</FormLabel>
+              <FormLabel>{t(locale, "createProfile.name")}</FormLabel>
               <FormControl>
                 <Input
                   {...field}
-                  placeholder="Enter your name"
+                  placeholder={t(locale, "createProfile.namePlaceholder")}
                   disabled={updateProfile.isPending}
                 />
               </FormControl>
-              <FormDescription>This will be your display name</FormDescription>
+              <FormDescription>
+                {t(locale, "createProfile.nameHelp")}
+              </FormDescription>
               <FormMessage />
             </FormItem>
           )}
@@ -144,7 +164,9 @@ const CreateProfileFormInner = ({ email, name, profilePic }: Props) => {
           size="lg"
           disabled={updateProfile.isPending}
         >
-          {updateProfile.isPending ? "Creating Profile..." : "Create Profile"}
+          {updateProfile.isPending
+            ? t(locale, "createProfile.creating")
+            : t(locale, "createProfile.submit")}
         </Button>
       </form>
     </Form>

@@ -4,28 +4,38 @@ import { useState } from "react";
 import { User, Quote } from "lucide-react";
 import { ProfileSettings } from "./profile-settings";
 import { QuotesSettings } from "./quotes-settings";
+import { t, type Locale } from "@/i18n";
 
-interface SettingsPageProps {
+export interface SettingsPageProps {
   user: {
     name: string;
     email: string;
     image: string | null;
   };
+  locale?: Locale;
 }
 
 type SettingsTab = "profile" | "quotes";
 
-export function SettingsPage({ user }: SettingsPageProps) {
+export function SettingsPage({ user, locale = "en" }: SettingsPageProps) {
   const [activeTab, setActiveTab] = useState<SettingsTab>("profile");
 
   const tabs = [
-    { id: "profile" as const, label: "Profile", icon: User },
-    { id: "quotes" as const, label: "Quotes", icon: Quote },
+    {
+      id: "profile" as const,
+      label: t(locale, "settings.profile.title"),
+      icon: User,
+    },
+    {
+      id: "quotes" as const,
+      label: t(locale, "settings.quotes.title"),
+      icon: Quote,
+    },
   ];
 
   return (
     <div className="max-w-6xl mx-auto p-6">
-      <h1 className="text-2xl font-bold mb-6">Settings</h1>
+      <h1 className="text-2xl font-bold mb-6">{t(locale, "settings.title")}</h1>
       
       <div className="flex flex-col md:flex-row gap-6">
         {/* Sidebar */}
@@ -57,8 +67,10 @@ export function SettingsPage({ user }: SettingsPageProps) {
 
         {/* Content */}
         <div className="flex-1 min-h-[400px]">
-          {activeTab === "profile" && <ProfileSettings user={user} />}
-          {activeTab === "quotes" && <QuotesSettings />}
+          {activeTab === "profile" && (
+            <ProfileSettings user={user} locale={locale} />
+          )}
+          {activeTab === "quotes" && <QuotesSettings locale={locale} />}
         </div>
       </div>
     </div>

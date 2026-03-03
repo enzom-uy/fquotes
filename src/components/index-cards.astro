@@ -1,19 +1,24 @@
 ---
+import { getTranslations, type Locale } from '@/i18n'
+
+const locale = (Astro.currentLocale || 'en') as Locale
+const t = getTranslations(locale)
+
 const elements = [
   {
     icon: "📸",
-    title: "Capture",
-    description: "Use your camera to photograph text",
+    title: t.home.features.capture.title,
+    description: t.home.features.capture.description,
   },
   {
     icon: "✂️",
-    title: "Crop",
-    description: "Select the exact fragment you want",
+    title: t.home.features.crop.title,
+    description: t.home.features.crop.description,
   },
   {
     icon: "🤖",
-    title: "Recognize",
-    description: "Automatically extract the quotes",
+    title: t.home.features.recognize.title,
+    description: t.home.features.recognize.description,
   },
 ];
 ---

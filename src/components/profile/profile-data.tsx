@@ -4,8 +4,9 @@ import { useFavoriteToggle, MAX_FAVORITES } from "@/hooks/use-favorite-toggle";
 import { QueryProvider } from "../query-provider";
 import { toast } from "@/hooks/use-toast";
 import { QuoteCard, type QuoteData } from "../quote-card";
+import { t, type Locale } from "@/i18n";
 
-interface ProfileDataProps {
+export interface ProfileDataProps {
   user: {
     name: string;
     email: string;
@@ -16,6 +17,7 @@ interface ProfileDataProps {
   initialRecentQuotes: QuoteData[] | undefined;
   userId: string;
   error: boolean;
+  locale?: Locale;
 }
 
 function ProfileData({
@@ -25,6 +27,7 @@ function ProfileData({
   initialRecentQuotes,
   userId,
   error,
+  locale = "en",
 }: ProfileDataProps) {
   const [quoteCount] = useState(initialQuoteCount ?? 0);
   const [favoriteQuotes, setFavoriteQuotes] = useState<QuoteData[]>(
@@ -72,8 +75,10 @@ function ProfileData({
   const handleToggleFavorite = (quoteId: string, newIsFavorite: boolean) => {
     if (newIsFavorite && favoriteQuotes.length >= MAX_FAVORITES) {
       toast({
-        title: "Maximum favorites reached",
-        description: `You can only have ${MAX_FAVORITES} favorite quotes. Remove one first.`,
+        title: t(locale, "quotesManager.maxFavoritesReached"),
+        description: t(locale, "quotesManager.maxFavoritesDescription", {
+          max: MAX_FAVORITES.toString(),
+        }),
         variant: "destructive",
       });
       return;
@@ -122,14 +127,14 @@ function ProfileData({
                   <div className="text-center">
                     <div className="text-2xl font-bold">{quoteCount}</div>
                     <div className="text-xs text-foreground-subtle">
-                      Total Quotes
+                      {t(locale, "profilePage.totalQuotes")}
                     </div>
                   </div>
                 </>
               ) : (
                 <StatNotFound
                   icon={<Frown />}
-                  text={"Quotes count not found."}
+                  text={t(locale, "errors.notFound")}
                 />
               )}
             </div>
@@ -142,14 +147,14 @@ function ProfileData({
                       {currentFavoriteCount}
                     </div>
                     <div className="text-xs text-foreground-subtle">
-                      Favorites
+                      {t(locale, "profilePage.favoriteQuotes")}
                     </div>
                   </div>{" "}
                 </>
               ) : (
                 <StatNotFound
                   icon={<Frown />}
-                  text={"Favorites quotes count not found."}
+                  text={t(locale, "errors.notFound")}
                 />
               )}
             </div>
@@ -161,7 +166,7 @@ function ProfileData({
       <div>
         <h2 className="text-xl font-semibold mb-4 flex items-center gap-2">
           <Star size={20} className="text-warning" />
-          Favorite Quotes
+          {t(locale, "profilePage.favoritesSection")}
         </h2>
         {favoriteQuotes.length > 0 ? (
           <div className="columns-1 md:columns-2 gap-4 space-y-4">
@@ -172,6 +177,7 @@ function ProfileData({
                 onToggleFavorite={handleToggleFavorite}
                 isTogglingFavorite={pendingFavoriteId === quote.id}
                 canAddFavorite={canAddFavorite}
+                locale={locale}
               />
             ))}
           </div>
@@ -179,8 +185,7 @@ function ProfileData({
           <div className="bg-background-elevated border border-border rounded-xl p-8 text-center">
             <Star size={32} className="mx-auto text-foreground-muted mb-3" />
             <p className="text-foreground-muted">
-              You don&apos;t have any favorite quotes yet. Click the star on any
-              quote to add it to your favorites!
+              {t(locale, "profilePage.noFavoritesDescription")}
             </p>
           </div>
         )}
@@ -191,7 +196,7 @@ function ProfileData({
         <div className="bg-background-elevated border border-border rounded-xl p-8 text-center">
           <BookOpen size={32} className="mx-auto text-danger mb-3" />
           <p className="text-foreground-muted">
-            Unable to load recent quotes. Please try again later.
+            {t(locale, "profilePage.loadError")}
           </p>
         </div>
       ) : recentQuotes && recentQuotes.length > 0 ? (
@@ -199,7 +204,7 @@ function ProfileData({
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-xl font-semibold flex items-center gap-2">
               <BookOpen size={20} className="text-primary" />
-              Recent Quotes
+              {t(locale, "profilePage.recentSection")}
             </h2>
             <a
               href="/quotes"
@@ -216,6 +221,7 @@ function ProfileData({
                 onToggleFavorite={handleToggleFavorite}
                 isTogglingFavorite={pendingFavoriteId === quote.id}
                 canAddFavorite={canAddFavorite}
+                locale={locale}
               />
             ))}
           </div>
@@ -224,7 +230,7 @@ function ProfileData({
         <div className="bg-background-elevated border border-border rounded-xl p-8 text-center">
           <BookOpen size={32} className="mx-auto text-foreground-muted mb-3" />
           <p className="text-foreground-muted">
-            You don&apos;t have any recent quotes yet. Go capture some!
+            {t(locale, "profilePage.noQuotesDescription")}
           </p>
         </div>
       )}
@@ -237,8 +243,8 @@ export function ProfileDataComponent(props: ProfileDataProps) {
 
   if (error) {
     toast({
-      title: "Failed to load profile data",
-      description: "Please try again later.",
+      title: t(props.locale || "en", "errors.generic"),
+      description: t(props.locale || "en", "errors.serverError"),
       variant: "destructive",
     });
   }

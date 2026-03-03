@@ -17,6 +17,7 @@ import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { BookSearch, type BookResult } from "@/components/capture/book-search";
 import { TagsInput } from "@/components/tags-input";
+import { t, type Locale } from "@/i18n";
 
 interface QuoteBook {
   id?: string;
@@ -69,6 +70,7 @@ interface QuoteCardProps {
   onToggleFavorite?: (quoteId: string, isFavorite: boolean) => void;
   isTogglingFavorite?: boolean;
   canAddFavorite?: boolean;
+  locale?: Locale;
 }
 
 const formatDate = (dateString: string) => {
@@ -104,6 +106,7 @@ export function QuoteCard({
   onToggleFavorite,
   isTogglingFavorite = false,
   canAddFavorite = true,
+  locale = "en",
 }: QuoteCardProps) {
   const isEditing = editingQuoteId === quote.id;
   const isFavorite = quote.isFavorite;
@@ -114,7 +117,7 @@ export function QuoteCard({
     if (navigator.share) {
       try {
         await navigator.share({
-          title: "Quote from QuoteKeeper",
+          title: t(locale, "quote.share"),
           text: `"${quote.text}" - ${quote.book?.title || "Unknown"}`,
           url: shareUrl,
         });
