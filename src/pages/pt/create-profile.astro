@@ -2,7 +2,7 @@
 export const prerender = false
 import Layout from '@/layouts/layout.astro'
 import { CreateProfileForm } from '@/components/auth/create-profile-form'
-import { getTranslations, type Locale } from '@/i18n'
+import { getTranslations, type Locale, getLocalizedPath } from '@/i18n'
 
 const { user } = Astro.locals
 
@@ -10,7 +10,7 @@ const locale = (Astro.currentLocale || 'en') as Locale
 const t = getTranslations(locale)
 
 if (!user) {
-    return Astro.redirect('/')
+    return Astro.redirect(getLocalizedPath('/', locale))
 }
 
 const createdAt = new Date(user.createdAt).getTime()
@@ -18,7 +18,7 @@ const updatedAt = new Date(user.updatedAt).getTime()
 const THRESHOLD_MS = 1000
 const profileCompleted = (updatedAt - createdAt) > THRESHOLD_MS
 if (profileCompleted) {
-    return Astro.redirect('/profile')
+    return Astro.redirect(getLocalizedPath('/profile', locale))
 }
 
 ---

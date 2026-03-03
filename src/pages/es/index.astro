@@ -5,7 +5,7 @@ import IndexCards from '@/components/index-cards.astro'
 import { GoogleSignInButton } from '@/components/auth/google-sign-in-button'
 import { CaptureImage } from '@/components/capture/capture-image'
 import { LanguageSwitcher } from '@/components/language-switcher'
-import { getTranslations, type Locale } from '@/i18n'
+import { getTranslations, type Locale, getLocalizedPath } from '@/i18n'
 
 export const prerender = false
 
@@ -24,7 +24,7 @@ if (session && user) {
   profileCompleted = (updatedAt - createdAt) > THRESHOLD_MS
   
   if (!profileCompleted) {
-    return Astro.redirect('/create-profile')
+    return Astro.redirect(getLocalizedPath('/create-profile', locale))
   }
 }
 ---

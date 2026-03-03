@@ -1,14 +1,19 @@
 ---
+import { getLocalizedPath, type Locale } from "@/i18n";
+
 interface Props {
   showNav?: boolean;
 }
 
 const { showNav = true } = Astro.props;
+const locale = (Astro.currentLocale || "en") as Locale;
+const homePath = getLocalizedPath('/', locale);
+const profilePath = getLocalizedPath('/profile', locale);
 ---
 
 <header class="border-b border-border bg-background-elevated">
   <div class="max-w-5xl mx-auto px-4 py-4 flex items-center justify-between">
-    <a href="/" class="flex items-center gap-3 hover:opacity-90 transition-opacity">
+    <a href={homePath} class="flex items-center gap-3 hover:opacity-90 transition-opacity">
       <div class="w-10 h-10 bg-gradient-to-br from-primary to-accent rounded-lg flex items-center justify-center text-2xl">
         📚
       </div>
@@ -18,13 +23,13 @@ const { showNav = true } = Astro.props;
     {showNav && (
       <nav class="flex items-center gap-4">
         <a 
-          href="/" 
+          href={homePath}
           class="px-4 py-2 text-sm text-foreground-muted hover:text-foreground transition-colors"
         >
           Capture
         </a>
         <a 
-          href="/profile" 
+          href={profilePath}
           class="px-4 py-2 text-sm text-foreground-muted hover:text-foreground transition-colors"
         >
           Profile

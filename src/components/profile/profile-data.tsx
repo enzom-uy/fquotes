@@ -4,7 +4,7 @@ import { useFavoriteToggle, MAX_FAVORITES } from "@/hooks/use-favorite-toggle";
 import { QueryProvider } from "../query-provider";
 import { toast } from "@/hooks/use-toast";
 import { QuoteCard, type QuoteData } from "../quote-card";
-import { t, type Locale } from "@/i18n";
+import { t, type Locale, getLocalizedPath } from "@/i18n";
 
 export interface ProfileDataProps {
   user: {
@@ -207,7 +207,7 @@ function ProfileData({
               {t(locale, "profilePage.recentSection")}
             </h2>
             <a
-              href="/quotes"
+              href={getLocalizedPath('/quotes', locale)}
               className="text-sm text-primary hover:underline transition-colors"
             >
               View all &rarr;

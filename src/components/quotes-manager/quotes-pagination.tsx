@@ -1,11 +1,13 @@
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { type PaginationInfo } from "./types";
+import { getLocalizedPath, type Locale } from "@/i18n";
 
 interface QuotesPaginationProps {
   pagination: PaginationInfo;
+  locale?: Locale;
 }
 
-export function QuotesPagination({ pagination }: QuotesPaginationProps) {
+export function QuotesPagination({ pagination, locale = "en" }: QuotesPaginationProps) {
   return (
     <div className="flex items-center justify-between border-t border-background-muted pt-6">
       <div className="text-sm text-foreground-muted">
@@ -27,7 +29,7 @@ export function QuotesPagination({ pagination }: QuotesPaginationProps) {
       <div className="flex items-center gap-2">
         {pagination.currentPage > 1 ? (
           <a
-            href={`/quotes?page=${pagination.currentPage - 1}`}
+            href={`${getLocalizedPath('/quotes', locale)}?page=${pagination.currentPage - 1}`}
             className="p-2 rounded-lg border border-border bg-background-elevated text-foreground hover:bg-background-muted hover:border-primary transition-all"
             title="Previous page"
           >
@@ -58,7 +60,7 @@ export function QuotesPagination({ pagination }: QuotesPaginationProps) {
             ) : (
               <a
                 key={page}
-                href={`/quotes?page=${page}`}
+                href={`${getLocalizedPath('/quotes', locale)}?page=${page}`}
                 className="min-w-10 h-10 px-3 rounded-lg border bg-background-elevated border-border text-foreground hover:bg-background-muted hover:border-primary transition-all flex items-center justify-center"
               >
                 {page}
@@ -69,7 +71,7 @@ export function QuotesPagination({ pagination }: QuotesPaginationProps) {
 
         {pagination.currentPage < pagination.totalPages ? (
           <a
-            href={`/quotes?page=${pagination.currentPage + 1}`}
+            href={`${getLocalizedPath('/quotes', locale)}?page=${pagination.currentPage + 1}`}
             className="p-2 rounded-lg border border-border bg-background-elevated text-foreground hover:bg-background-muted hover:border-primary transition-all"
             title="Next page"
           >

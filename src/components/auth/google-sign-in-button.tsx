@@ -1,5 +1,5 @@
 import { authClient } from "@/lib/auth-client";
-import { t, type Locale } from "@/i18n";
+import { t, type Locale, getLocalizedPath } from "@/i18n";
 
 export interface GoogleSignInButtonProps {
   locale?: Locale;
@@ -7,10 +7,14 @@ export interface GoogleSignInButtonProps {
 
 export function GoogleSignInButton({ locale = "en" }: GoogleSignInButtonProps) {
   const handleLogin = async () => {
+    const baseUrl = import.meta.env.PUBLIC_FRONTEND_URL;
+    const profilePath = getLocalizedPath('/profile', locale);
+    const createProfilePath = getLocalizedPath('/create-profile', locale);
+    
     await authClient.signIn.social({
       provider: "google",
-      callbackURL: `${import.meta.env.PUBLIC_FRONTEND_URL}/profile`,
-      newUserCallbackURL: `${import.meta.env.PUBLIC_FRONTEND_URL}/create-profile`,
+      callbackURL: `${baseUrl}${profilePath}`,
+      newUserCallbackURL: `${baseUrl}${createProfilePath}`,
     });
   };
   return (

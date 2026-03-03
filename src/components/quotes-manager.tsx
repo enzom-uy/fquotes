@@ -546,7 +546,7 @@ const QuotesManagerInner = ({
 
       {/* Pagination (static quotes only) */}
       {!isSearchActive && pagination.totalPages > 1 && (
-        <QuotesPagination pagination={pagination} />
+        <QuotesPagination pagination={pagination} locale={locale} />
       )}
 
       {/* Delete Confirmation AlertDialog */}

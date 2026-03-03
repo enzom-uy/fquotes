@@ -2,7 +2,7 @@
 import { NavbarMenu } from "./navbar-menu";
 import { UserDropdown } from "./profile/user-dropdown";
 import { LanguageSwitcher } from "./language-switcher";
-import { getTranslations, type Locale } from "@/i18n";
+import { getTranslations, type Locale, getLocalizedPath } from "@/i18n";
 
 interface Props {
   user?: {
@@ -16,13 +16,14 @@ const { user } = Astro.props;
 const currentPath = Astro.url.pathname;
 const locale = (Astro.currentLocale || "en") as Locale;
 const t = getTranslations(locale);
+const homePath = getLocalizedPath('/', locale);
 ---
 
 <header class="sticky top-0 z-50 border-b border-border bg-background-elevated/95 backdrop-blur-sm">
   <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
     <div class="flex items-center justify-between h-16">
       {/* Logo */}
-      <a href="/" class="flex items-center gap-3 hover:opacity-90 transition-opacity group">
+      <a href={homePath} class="flex items-center gap-3 hover:opacity-90 transition-opacity group">
         <div class="w-10 h-10 bg-gradient-to-br from-primary to-accent rounded-xl flex items-center justify-center text-2xl group-hover:scale-105 transition-transform">
           📚
         </div>
@@ -33,7 +34,7 @@ const t = getTranslations(locale);
       {user && (
         <nav class="hidden md:flex items-center gap-1">
           <a
-            href="/"
+            href={homePath}
             class={`
               flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all
               ${currentPath === '/' 
@@ -79,7 +80,7 @@ const t = getTranslations(locale);
           </>
         ) : (
           <a
-            href="/"
+            href={homePath}
             class="px-4 py-2 text-sm font-medium text-foreground-muted hover:text-foreground transition-colors"
           >
             {t.common.signIn}

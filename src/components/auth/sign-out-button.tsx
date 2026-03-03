@@ -1,8 +1,13 @@
 import { useState } from "react";
 import { LogOut } from "lucide-react";
 import { authClient } from "@/lib/auth-client";
+import { getLocalizedPath, type Locale } from "@/i18n";
 
-export const SignOutButton = () => {
+interface SignOutButtonProps {
+  locale?: Locale;
+}
+
+export const SignOutButton = ({ locale = "en" }: SignOutButtonProps) => {
   const [isLoading, setIsLoading] = useState(false);
 
   const handleSignOut = async () => {
@@ -11,7 +16,7 @@ export const SignOutButton = () => {
       await authClient.signOut({
         fetchOptions: {
           onSuccess: () => {
-            window.location.href = "/";
+            window.location.href = getLocalizedPath('/', locale);
           },
         },
       });

@@ -17,7 +17,7 @@ import {
 import { useUpdateProfile } from "@/hooks/use-update-profile";
 import { ApiError } from "@/lib/api";
 import { QueryProvider } from "../query-provider";
-import { t, type Locale } from "@/i18n";
+import { t, type Locale, getLocalizedPath } from "@/i18n";
 
 const getProfileFormSchema = (locale: Locale) =>
   z.object({
@@ -79,7 +79,7 @@ const CreateProfileFormInner = ({
 
     updateProfile.mutate(data, {
       onSuccess: () => {
-        window.location.href = "/profile";
+        window.location.href = getLocalizedPath('/profile', locale);
       },
       onError: (err) => {
         if (err instanceof ApiError) {
