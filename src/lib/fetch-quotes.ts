@@ -71,11 +71,13 @@ export async function fetchUserQuotes(
 
   try {
     const response = await fetch(
-      `${BACKEND_URL}/quotes/user/${userId}?perPage=${perPage}&page=${page}`,
+      `${BACKEND_URL}/quotes/user/${userId}/list?perPage=${perPage}&page=${page}`,
       {
         headers: {
-          cookie: cookieHeader,
+          'cookie': cookieHeader,
+          'content-type': 'application/json',
         },
+        credentials: 'include',
       }
     );
 
