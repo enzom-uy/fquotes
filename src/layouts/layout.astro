@@ -2,6 +2,7 @@
 import { ClientRouter } from 'astro:transitions'
 import '@/styles/globals.css'
 import Navbar from '@/components/navbar.astro'
+import Footer from '@/components/footer.astro'
 import { Toaster } from '@/components/ui/toaster'
 
 interface Props {
@@ -28,12 +29,15 @@ const shouldShowNavbar = showNavbar && session && user
     <title>{title}</title>
     <ClientRouter />
   </head>
-  <body>
+  <body class="flex flex-col min-h-screen">
     <!-- Navigation progress bar -->
     <div id="progress-bar" transition:persist style="position:fixed;top:0;left:0;width:0%;height:3px;background:var(--color-primary);z-index:100;opacity:0;pointer-events:none;"></div>
 
     {shouldShowNavbar && <Navbar user={user} />}
-    <slot />
+    <main class="flex-1">
+      <slot />
+    </main>
+    <Footer />
     <Toaster client:idle transition:persist />
 
     <script is:inline>
