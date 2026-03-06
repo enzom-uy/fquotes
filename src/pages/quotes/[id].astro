@@ -2,35 +2,52 @@
 import { QuoteData } from "@/components/quote-card"
 import { getLocalizedPath, type Locale, t } from "@/i18n"
 import Layout from "@/layouts/layout.astro"
-import { api } from "@/lib/api"
 import { QuoteDetailView } from "@/components/quote-detail-view"
 
 const { id } = Astro.params
 const locale = (Astro.currentLocale || 'en') as Locale
+
+// Use backend URL directly in SSR context
+const BACKEND_URL = import.meta.env.PUBLIC_BACKEND_URL || 'http://localhost:5000/api'
+const cookieHeader = Astro.request.headers.get('cookie') || ''
 
 let quote: QuoteData | null = null
 let quoteAuthor: { id: string; name: string; image: string | null } | null = null
 let errorMessage = ""
 
 try {
-  quote = await api.get<QuoteData>(`/quotes/${id}`)
+  const quoteRes = await fetch(`${BACKEND_URL}/quotes/${id}`, {
+    headers: { cookie: cookieHeader }
+  })
   
-  if (quote?.userId) {
-    try {
-      quoteAuthor = await api.get<{ id: string; name: string; image: string | null }>(
-        `/user?id=${quote.userId}`
-      )
-    } catch (err) {
-      console.error('Error fetching quote author:', err)
+  if (quoteRes.ok) {
+    quote = await quoteRes.json()
+    
+    if (quote?.userId) {
+      try {
+        const authorRes = await fetch(`${BACKEND_URL}/user?id=${quote.userId}`, {
+          headers: { cookie: cookieHeader }
+        })
+        
+        if (authorRes.ok) {
+          const authorData = await authorRes.json()
+          quoteAuthor = {
+            id: authorData.id,
+            name: authorData.name,
+            image: authorData.image || null
+          }
+        }
+      } catch (err) {
+        // Silent fail - author data is optional
+      }
     }
-  }
-} catch (error: any) {
-  // Handle 404 or other errors
-  if (error?.status === 404) {
+  } else if (quoteRes.status === 404) {
     errorMessage = t(locale, 'quote.quoteNotFound')
   } else {
     errorMessage = t(locale, 'errors.generic')
   }
+} catch (error: any) {
+  errorMessage = t(locale, 'errors.generic')
 }
 
 const { session } = Astro.locals

@@ -1,5 +1,11 @@
+// Use the local proxy instead of calling Railway directly
+// The proxy at /api/[...path].ts will forward to the backend
+// In browser: use relative URL (/api)
+// In SSR: use absolute URL (window is undefined in SSR)
 export const BACKEND_URL =
-  import.meta.env.PUBLIC_BACKEND_URL || "http://localhost:5000/api";
+  typeof window !== "undefined"
+    ? "/api"
+    : (import.meta.env.PUBLIC_FRONTEND_URL || "http://localhost:3001") + "/api";
 
 class ApiError extends Error {
   constructor(

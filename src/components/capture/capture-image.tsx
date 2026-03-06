@@ -241,7 +241,6 @@ const CaptureImageInner = ({ locale = "en" }: CaptureImageProps) => {
         variant: "success",
       });
     } catch (error) {
-      console.error(error);
       setIsProcessing(false);
 
       // Show error toast

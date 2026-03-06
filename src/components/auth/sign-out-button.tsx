@@ -21,7 +21,6 @@ export const SignOutButton = ({ locale = "en" }: SignOutButtonProps) => {
         },
       });
     } catch (error) {
-      console.error("Sign out error:", error);
       setIsLoading(false);
     }
   };

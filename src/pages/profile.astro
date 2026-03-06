@@ -15,7 +15,8 @@ if (!session || !user) {
   return Astro.redirect(getLocalizedPath('/', locale))
 }
 
-const BACKEND_URL = import.meta.env.PUBLIC_BACKEND_URL
+// Call backend directly in SSR context (fetch needs absolute URLs server-side)
+const BACKEND_URL = import.meta.env.PUBLIC_BACKEND_URL || 'http://localhost:5000/api'
 const cookieHeader = Astro.request.headers.get('cookie') || ''
 
 interface QuoteResponse {
@@ -72,7 +73,6 @@ try {
     recentQuotes = result.data
   }
 } catch (err) {
-  console.error('Failed to fetch profile data:', err)
   error = true
 }
 ---

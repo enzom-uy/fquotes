@@ -36,7 +36,6 @@ export const NavbarMenu = ({
         },
       });
     } catch (error) {
-      console.error("Sign out error:", error);
       setIsSigningOut(false);
     }
   };

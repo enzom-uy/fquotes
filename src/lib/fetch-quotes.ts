@@ -20,6 +20,7 @@ export interface FetchQuotesResult {
   error: string;
 }
 
+// Call backend directly (this is used in SSR context where fetch needs absolute URLs)
 const BACKEND_URL = import.meta.env.PUBLIC_BACKEND_URL || 'http://localhost:5000/api';
 const DEFAULT_PER_PAGE = 10;
 const DEFAULT_PAGE = 0;
@@ -90,7 +91,6 @@ export async function fetchUserQuotes(
       error: '',
     };
   } catch (error) {
-    console.error('Error fetching quotes:', error);
     return {
       quotes: [],
       totalQuotes: 0,

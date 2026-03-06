@@ -54,7 +54,7 @@ export function QuoteDetailView({
           url: shareUrl,
         });
       } catch (err) {
-        console.error("Error sharing:", err);
+        // User cancelled share or browser doesn't support
       }
     } else {
       await navigator.clipboard.writeText(shareUrl);

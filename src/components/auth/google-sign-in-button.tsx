@@ -7,7 +7,8 @@ export interface GoogleSignInButtonProps {
 
 export function GoogleSignInButton({ locale = "en" }: GoogleSignInButtonProps) {
   const handleLogin = async () => {
-    const baseUrl = import.meta.env.PUBLIC_FRONTEND_URL;
+    // Use current origin instead of env var
+    const baseUrl = typeof window !== "undefined" ? window.location.origin : import.meta.env.PUBLIC_FRONTEND_URL;
     const profilePath = getLocalizedPath('/profile', locale);
     const createProfilePath = getLocalizedPath('/create-profile', locale);
     
