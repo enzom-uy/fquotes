@@ -4,7 +4,8 @@ import { Switch } from "../ui/switch";
 import { Label } from "../ui/label";
 import { TagsInput } from "../tags-input";
 import { Globe, Lock, BookOpen, User } from "lucide-react";
-import type { BookResult } from "./book-search";
+import { BookSearch, type BookResult } from "./book-search";
+import { t, type Locale } from "@/i18n";
 
 export interface QuoteMetadata {
   text: string;
@@ -18,6 +19,10 @@ interface EditableQuoteCardProps {
   index: number;
   onUpdate: (index: number, metadata: QuoteMetadata) => void;
   selectedBook?: BookResult | null;
+  onBookSelect?: (book: BookResult) => void;
+  onBookClear?: () => void;
+  bookError?: string;
+  locale?: Locale;
 }
 
 export const EditableQuoteCard = ({
@@ -25,6 +30,10 @@ export const EditableQuoteCard = ({
   index,
   onUpdate,
   selectedBook,
+  onBookSelect,
+  onBookClear,
+  bookError,
+  locale = "en",
 }: EditableQuoteCardProps) => {
   const updateField = <K extends keyof QuoteMetadata>(
     field: K,
@@ -35,12 +44,28 @@ export const EditableQuoteCard = ({
 
   return (
     <div className="bg-background-elevated border border-background-muted rounded-xl p-5 hover:border-primary transition-colors flex flex-col gap-3">
+      {/* Book Search - moved to top for visibility */}
+      {onBookSelect && onBookClear && (
+        <div className="space-y-1">
+          <Label className="text-xs text-foreground-subtle">
+            {t(locale, "capture.book")} *
+          </Label>
+          <BookSearch
+            onSelect={onBookSelect}
+            onClear={onBookClear}
+            selectedBook={selectedBook ?? null}
+            error={bookError}
+            locale={locale}
+          />
+        </div>
+      )}
+
       {/* Quote text — editable textarea styled to look like the final blockquote */}
       <Textarea
         value={metadata.text}
         onChange={(e) => updateField("text", e.target.value)}
         className="min-h-[100px] focus:min-h-[250px] transition-all duration-300 resize-none text-sm italic leading-relaxed bg-transparent shadow-none p-0 placeholder:not-italic border border-border focus:border-primary"
-        placeholder="Quote text..."
+        placeholder={t(locale, "capture.quoteText")}
       />
 
       {/* Book & Chapter info — mirrors the final card layout */}
@@ -64,7 +89,9 @@ export const EditableQuoteCard = ({
         ) : (
           <div className="flex items-center gap-2 text-foreground-subtle">
             <BookOpen size={16} className="flex-shrink-0" />
-            <span className="text-xs italic">No book selected</span>
+            <span className="text-xs italic">
+              {t(locale, "capture.noBookSelected")}
+            </span>
           </div>
         )}
       </div>
@@ -77,24 +104,32 @@ export const EditableQuoteCard = ({
             htmlFor={`chapter-${index}`}
             className="text-xs text-foreground-subtle"
           >
-            Chapter / Page
+            {t(locale, "capture.chapterPage")}
           </Label>
           <Input
             id={`chapter-${index}`}
             value={metadata.chapter}
             onChange={(e) => updateField("chapter", e.target.value)}
-            placeholder="e.g. Chapter 3, p. 42"
+            placeholder={t(locale, "capture.chapterPlaceholder")}
             className="h-8 text-sm bg-background-muted border-background-muted"
           />
         </div>
 
         {/* Tags */}
         <div className="space-y-1">
-          <Label className="text-xs text-foreground-subtle">Tags</Label>
+          <div className="flex items-center justify-between">
+            <Label className="text-xs text-foreground-subtle">
+              {t(locale, "capture.tags")}
+            </Label>
+            <span className="text-xs text-foreground-muted">
+              {metadata.tags.length}/10
+            </span>
+          </div>
           <TagsInput
             value={metadata.tags}
             onChange={(tags) => updateField("tags", tags)}
-            placeholder="Add tags, separated by comma..."
+            placeholder={t(locale, "capture.tagsPlaceholder")}
+            maxTags={10}
           />
         </div>
 
@@ -113,12 +148,12 @@ export const EditableQuoteCard = ({
               {metadata.isPublic ? (
                 <>
                   <Globe size={14} className="text-success" />
-                  Public
+                  {t(locale, "capture.public")}
                 </>
               ) : (
                 <>
                   <Lock size={14} />
-                  Private
+                  {t(locale, "capture.private")}
                 </>
               )}
             </Label>

@@ -16,6 +16,7 @@ export interface QuoteData {
   tags: string[] | null;
   createdAt: string;
   bookId: string;
+  userId: string;
   book: QuoteBook | null;
 }
 

@@ -17,6 +17,7 @@ export interface QuoteSearchResult {
   tags: string[] | null;
   createdAt: string;
   bookId: string;
+  userId: string;
   book: QuoteBookInfo | null;
 }
 

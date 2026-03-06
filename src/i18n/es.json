@@ -10,7 +10,8 @@
     "close": "Cerrar",
     "loading": "Cargando...",
     "error": "Error",
-    "success": "Éxito"
+    "success": "Éxito",
+    "quote": "Cita"
   },
   "nav": {
     "capture": "Capturar",
@@ -163,7 +164,29 @@
     "tip1": "Asegura buena iluminación y sombras mínimas",
     "tip2": "Mantén la cámara estable y enfoca en el texto",
     "tip3": "Captura el texto en un ángulo recto cuando sea posible",
-    "tip4": "Puedes subir múltiples imágenes a la vez"
+    "tip4": "Puedes subir múltiples imágenes a la vez",
+    "processingProgress": "Procesando {current}/{total}...",
+    "saving": "Guardando...",
+    "saveQuotes": "Guardar Citas",
+    "startOver": "Empezar de Nuevo",
+    "successfullyExtracted": "Texto extraído exitosamente de {count} imagen(es).",
+    "errorProcessing": "Error al procesar imágenes: {error}",
+    "successfullySaved": "{count} cita(s) guardada(s) exitosamente.",
+    "errorSaving": "Error al guardar citas: {error}",
+    "book": "Libro",
+    "noBookSelected": "Ningún libro seleccionado",
+    "quoteText": "Texto de la cita...",
+    "chapterPage": "Capítulo / Página",
+    "chapterPlaceholder": "ej. Capítulo 3, p. 42",
+    "tagsPlaceholder": "Añade etiquetas, separadas por coma...",
+    "public": "Público",
+    "private": "Privado",
+    "searchBook": "Buscar un libro...",
+    "searchDifferentBook": "Buscar un libro diferente...",
+    "removeBook": "Eliminar libro seleccionado",
+    "noBooksFound": "No se encontraron libros.",
+    "typeToSearch": "Escribe al menos 2 caracteres para buscar.",
+    "searching": "Buscando..."
   },
   "quote": {
     "by": "por",
@@ -177,7 +200,18 @@
     "confirmDelete": "¿Estás seguro de que quieres eliminar esta cita?",
     "quoteDeleted": "Cita eliminada exitosamente",
     "public": "Público",
-    "private": "Privado"
+    "private": "Privado",
+    "addedOn": "Añadida el",
+    "from": "de",
+    "viewProfile": "Ver perfil",
+    "sharedBy": "Compartida por",
+    "backToQuotes": "Volver a citas",
+    "quoteNotFound": "Cita no encontrada",
+    "privateQuote": "Esta cita es privada",
+    "authorsFavorite": "Favorita del Autor",
+    "viewQuote": "Ver cita",
+    "showMore": "Mostrar más",
+    "showLess": "Mostrar menos"
   },
   "errors": {
     "generic": "Ocurrió un error. Por favor, intenta de nuevo.",

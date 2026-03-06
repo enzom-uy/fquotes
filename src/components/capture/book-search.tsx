@@ -11,6 +11,7 @@ import {
 import { Popover, PopoverContent, PopoverTrigger } from "../ui/popover";
 import { Input } from "../ui/input";
 import { useBookSearch, type BookResult } from "@/hooks/use-book-search";
+import { t, type Locale } from "@/i18n";
 
 export type { BookResult };
 
@@ -20,6 +21,7 @@ interface BookSearchProps {
   selectedBook: BookResult | null;
   error?: string;
   className?: string;
+  locale?: Locale;
 }
 
 function useDebounce<T>(value: T, delay: number): T {
@@ -39,6 +41,7 @@ export const BookSearch = ({
   selectedBook,
   error,
   className,
+  locale = "en",
 }: BookSearchProps) => {
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState("");
@@ -109,7 +112,7 @@ export const BookSearch = ({
             type="button"
             onClick={() => onClear?.()}
             className="flex-shrink-0 rounded-md p-1 text-foreground-muted hover:bg-background-muted hover:text-foreground transition-colors"
-            title="Remove selected book"
+            title={t(locale, "capture.removeBook")}
           >
             <X className="h-4 w-4" />
           </button>
@@ -127,17 +130,14 @@ export const BookSearch = ({
               onFocus={handleInputFocus}
               placeholder={
                 selectedBook
-                  ? "Search for a different book..."
-                  : "Search for a book..."
+                  ? t(locale, "capture.searchDifferentBook")
+                  : t(locale, "capture.searchBook")
               }
               className={cn(
-                "pl-9 pr-9",
+                "pl-9",
                 error && "border-danger focus-visible:ring-danger",
               )}
             />
-            {isFetching && (
-              <Loader2 className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 animate-spin text-foreground-muted" />
-            )}
           </div>
         </PopoverTrigger>
         <PopoverContent
@@ -151,19 +151,19 @@ export const BookSearch = ({
               {results.length === 0 &&
                 !isFetching &&
                 query.trim().length >= 2 && (
-                  <CommandEmpty>No books found.</CommandEmpty>
+                  <CommandEmpty>{t(locale, "capture.noBooksFound")}</CommandEmpty>
                 )}
               {results.length === 0 &&
                 !isFetching &&
                 query.trim().length < 2 && (
                   <CommandEmpty>
-                    Type at least 2 characters to search.
+                    {t(locale, "capture.typeToSearch")}
                   </CommandEmpty>
                 )}
               {isFetching && results.length === 0 && (
                 <div className="flex items-center justify-center gap-2 py-6 text-sm text-foreground-muted">
                   <Loader2 className="h-4 w-4 animate-spin" />
-                  Searching...
+                  {t(locale, "capture.searching")}
                 </div>
               )}
               {results.length > 0 && (

@@ -1,0 +1,74 @@
+---
+import { QuoteData } from "@/components/quote-card"
+import { getLocalizedPath, type Locale, t } from "@/i18n"
+import Layout from "@/layouts/layout.astro"
+import { api } from "@/lib/api"
+import { QuoteDetailView } from "@/components/quote-detail-view"
+
+const { id } = Astro.params
+const locale = (Astro.currentLocale || 'en') as Locale
+
+// Fetch quote from backend
+let quote: QuoteData | null = null
+let quoteAuthor: { id: string; name: string; image: string | null } | null = null
+let errorMessage = ""
+
+try {
+  quote = await api.get<QuoteData>(`/quotes/${id}`)
+  
+  // Fetch quote author information
+  if (quote?.userId) {
+    try {
+      quoteAuthor = await api.get<{ id: string; name: string; image: string | null }>(
+        `/user?id=${quote.userId}`
+      )
+    } catch (err) {
+      console.error('Error fetching quote author:', err)
+    }
+  }
+} catch (error: any) {
+  // Handle 404 or other errors
+  if (error?.status === 404) {
+    errorMessage = t(locale, 'quote.quoteNotFound')
+  } else {
+    errorMessage = t(locale, 'errors.generic')
+  }
+}
+
+const { session } = Astro.locals
+const userId = session?.userId
+const userIsOwner = userId && quote ? userId === quote.userId : false
+
+// Redirect if quote is private and user is not the owner
+if (quote && !quote.isPublic && !userIsOwner) {
+  return Astro.redirect(getLocalizedPath('/', locale))
+}
+
+const pageTitle = quote 
+  ? `${quote.book?.title || t(locale, 'common.quote')} - ${t(locale, 'common.appName')}`
+  : `${t(locale, 'common.quote')} - ${t(locale, 'common.appName')}`
+---
+
+<Layout title={pageTitle}>
+  {errorMessage ? (
+    <div class="min-h-screen flex items-center justify-center">
+      <div class="text-center">
+        <h1 class="text-3xl font-bold mb-4">{errorMessage}</h1>
+        <a 
+          href={getLocalizedPath('/', locale)}
+          class="text-primary hover:underline"
+        >
+          {t(locale, 'quote.backToQuotes')}
+        </a>
+      </div>
+    </div>
+  ) : quote ? (
+    <QuoteDetailView 
+      quote={quote} 
+      quoteAuthor={quoteAuthor}
+      locale={locale} 
+      userIsOwner={userIsOwner}
+      client:only="react"
+    />
+  ) : null}
+</Layout>

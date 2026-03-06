@@ -8,6 +8,8 @@ interface TagsInputProps {
   onChange: (tags: string[]) => void;
   placeholder?: string;
   className?: string;
+  maxTags?: number;
+  showCounter?: boolean;
 }
 
 export const TagsInput = ({
@@ -15,18 +17,30 @@ export const TagsInput = ({
   onChange,
   placeholder = "Add tags separated by comma...",
   className,
+  maxTags = 10,
+  showCounter = false,
 }: TagsInputProps) => {
   const [inputValue, setInputValue] = useState("");
   const inputRef = useRef<HTMLInputElement>(null);
 
   const addTags = (raw: string) => {
+    // Check if we have space for new tags
+    const remainingSlots = maxTags - value.length;
+    if (remainingSlots <= 0) {
+      // Don't add tags if we're at the limit, but clear the input
+      return;
+    }
+
     const newTags = raw
       .split(",")
       .map((t) => t.trim())
       .filter((t) => t.length > 0 && !value.includes(t));
 
-    if (newTags.length > 0) {
-      onChange([...value, ...newTags]);
+    // Limit to available slots
+    const tagsToAdd = newTags.slice(0, remainingSlots);
+
+    if (tagsToAdd.length > 0) {
+      onChange([...value, ...tagsToAdd]);
     }
   };
 

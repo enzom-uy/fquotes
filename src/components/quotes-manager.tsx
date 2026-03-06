@@ -155,7 +155,9 @@ const QuotesManagerInner = ({
     if (newIsFavorite && !canAddFavorite) {
       toast({
         title: t(locale, "quotesManager.maxFavoritesReached"),
-        description: t(locale, "quotesManager.maxFavoritesDescription", { max: MAX_FAVORITES.toString() }),
+        description: t(locale, "quotesManager.maxFavoritesDescription", {
+          max: MAX_FAVORITES.toString(),
+        }),
         variant: "destructive",
       });
       return;
@@ -205,7 +207,9 @@ const QuotesManagerInner = ({
             title:
               idsToDelete.length === 1
                 ? t(locale, "quotesManager.quoteDeleted")
-                : t(locale, "quotesManager.quotesDeletedCount", { count: idsToDelete.length.toString() }),
+                : t(locale, "quotesManager.quotesDeletedCount", {
+                    count: idsToDelete.length.toString(),
+                  }),
           });
           if (isSearchActive) {
             const q = activeQuery;
@@ -378,7 +382,11 @@ const QuotesManagerInner = ({
     <div className="flex flex-col gap-4">
       {/* Collection count */}
       <p className="text-foreground-muted -mt-2">
-        {adjustedTotal} {adjustedTotal !== 1 ? t(locale, "quotesManager.collectionCountPlural") : t(locale, "quotesManager.collectionCount")} {t(locale, "quotesManager.inYourCollection")}
+        {adjustedTotal}{" "}
+        {adjustedTotal !== 1
+          ? t(locale, "quotesManager.collectionCountPlural")
+          : t(locale, "quotesManager.collectionCount")}{" "}
+        {t(locale, "quotesManager.inYourCollection")}
       </p>
 
       {/* Search + Actions bar */}
@@ -424,7 +432,9 @@ const QuotesManagerInner = ({
               className="text-danger focus:text-danger"
             >
               <Trash2 size={16} />
-              {bulkMode ? t(locale, "quotesManager.cancelBulkDelete") : t(locale, "quotesManager.deleteMultiple")}
+              {bulkMode
+                ? t(locale, "quotesManager.cancelBulkDelete")
+                : t(locale, "quotesManager.deleteMultiple")}
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
@@ -464,9 +474,7 @@ const QuotesManagerInner = ({
       {hitLimit && (
         <div className="flex items-center gap-2 text-sm text-warning bg-warning/10 border border-warning/30 rounded-lg px-3 py-2">
           <AlertTriangle size={16} className="flex-shrink-0" />
-          <span>
-            {t(locale, "quotesManager.limitWarning")}
-          </span>
+          <span>{t(locale, "quotesManager.limitWarning")}</span>
         </div>
       )}
 
@@ -565,10 +573,12 @@ const QuotesManagerInner = ({
             <AlertDialogTitle>
               {dialogCount === 1
                 ? t(locale, "quotesManager.deleteQuote")
-                : t(locale, "quotesManager.deleteQuotes", { count: dialogCount.toString() })}
+                : t(locale, "quotesManager.deleteQuotes", {
+                    count: dialogCount.toString(),
+                  })}
             </AlertDialogTitle>
             <AlertDialogDescription>
-              {dialogCount === 1 
+              {dialogCount === 1
                 ? t(locale, "quotesManager.deleteConfirmation")
                 : t(locale, "quotesManager.deleteConfirmationPlural")}
             </AlertDialogDescription>

@@ -234,7 +234,10 @@ const CaptureImageInner = ({ locale = "en" }: CaptureImageProps) => {
       // Show success toast
       toast({
         title: t(locale, "capture.processingComplete"),
-        description: `Successfully extracted text from ${capturedImages.length} image${capturedImages.length !== 1 ? "s" : ""}.`,
+        description: t(locale, "capture.successfullyExtracted").replace(
+          "{count}",
+          capturedImages.length.toString(),
+        ),
         variant: "success",
       });
     } catch (error) {
@@ -244,7 +247,10 @@ const CaptureImageInner = ({ locale = "en" }: CaptureImageProps) => {
       // Show error toast
       toast({
         title: t(locale, "capture.processingFailed"),
-        description: `Error processing images: ${error}`,
+        description: t(locale, "capture.errorProcessing").replace(
+          "{error}",
+          String(error),
+        ),
         variant: "destructive",
       });
     }
@@ -316,7 +322,10 @@ const CaptureImageInner = ({ locale = "en" }: CaptureImageProps) => {
       onSuccess: () => {
         toast({
           title: t(locale, "capture.quotesSaved"),
-          description: `Successfully saved ${quotesMetadata.length} quote${quotesMetadata.length !== 1 ? "s" : ""}.`,
+          description: t(locale, "capture.successfullySaved").replace(
+            "{count}",
+            quotesMetadata.length.toString(),
+          ),
           variant: "success",
         });
         handleClearAll();
@@ -324,7 +333,10 @@ const CaptureImageInner = ({ locale = "en" }: CaptureImageProps) => {
       onError: (error) => {
         toast({
           title: t(locale, "capture.failedToSave"),
-          description: `Error saving quotes: ${error.message}`,
+          description: t(locale, "capture.errorSaving").replace(
+            "{error}",
+            error.message,
+          ),
           variant: "destructive",
         });
       },
@@ -459,8 +471,9 @@ const CaptureImageInner = ({ locale = "en" }: CaptureImageProps) => {
                 {isProcessing ? (
                   <>
                     <div className="w-5 h-5 border-2 border-background/20 border-t-background rounded-full animate-spin" />
-                    Processing {processingProgress.current}/
-                    {processingProgress.total}...
+                    {t(locale, "capture.processingProgress")
+                      .replace("{current}", processingProgress.current.toString())
+                      .replace("{total}", processingProgress.total.toString())}
                   </>
                 ) : (
                   <>
@@ -479,12 +492,12 @@ const CaptureImageInner = ({ locale = "en" }: CaptureImageProps) => {
                   {saveQuotesMutation.isPending ? (
                     <>
                       <Loader2 size={20} className="animate-spin" />
-                      Saving...
+                      {t(locale, "capture.saving")}
                     </>
                   ) : (
                     <>
                       <Save size={20} />
-                      Save Quotes
+                      {t(locale, "capture.saveQuotes")}
                     </>
                   )}
                 </Button>
@@ -494,7 +507,7 @@ const CaptureImageInner = ({ locale = "en" }: CaptureImageProps) => {
                   className="flex items-center justify-center gap-2 bg-danger text-background font-semibold hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   <X size={20} />
-                  Start Over
+                  {t(locale, "capture.startOver")}
                 </Button>
               </>
             )}
@@ -543,9 +556,13 @@ const CaptureImageInner = ({ locale = "en" }: CaptureImageProps) => {
                       />
                     </DialogContent>
                   </Dialog>
-                  {/* Book search per quote */}
-                  <BookSearch
-                    onSelect={(book) => {
+                  {/* Editable quote card — styled to preview the final result */}
+                  <EditableQuoteCard
+                    metadata={quoteData}
+                    index={index}
+                    onUpdate={handleUpdateQuote}
+                    selectedBook={selectedBooks[index] ?? null}
+                    onBookSelect={(book) => {
                       setSelectedBooks((prev) => {
                         const updated = [...prev];
                         updated[index] = book;
@@ -557,22 +574,15 @@ const CaptureImageInner = ({ locale = "en" }: CaptureImageProps) => {
                         return updated;
                       });
                     }}
-                    onClear={() =>
+                    onBookClear={() =>
                       setSelectedBooks((prev) => {
                         const updated = [...prev];
                         updated[index] = null;
                         return updated;
                       })
                     }
-                    selectedBook={selectedBooks[index] ?? null}
-                    error={bookErrors[index] ?? undefined}
-                  />
-                  {/* Editable quote card — styled to preview the final result */}
-                  <EditableQuoteCard
-                    metadata={quoteData}
-                    index={index}
-                    onUpdate={handleUpdateQuote}
-                    selectedBook={selectedBooks[index] ?? null}
+                    bookError={bookErrors[index] ?? undefined}
+                    locale={locale}
                   />
                 </div>
               ))}

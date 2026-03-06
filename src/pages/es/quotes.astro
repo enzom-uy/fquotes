@@ -1,7 +1,8 @@
 ---
 import Layout from '@/layouts/layout.astro';
-import { QuotesManager, type QuoteData } from '@/components/quotes-manager';
+import { QuotesManager } from '@/components/quotes-manager';
 import { getTranslations, type Locale, getLocalizedPath } from '@/i18n';
+import { fetchUserQuotes, calculatePagination } from '@/lib/fetch-quotes';
 
 export const prerender = false;
 
@@ -18,66 +19,20 @@ if (!session) {
 const PER_PAGE = 10;
 const currentPage = Math.max(1, Number(Astro.url.searchParams.get('page')) || 1);
 
-const BACKEND_URL = import.meta.env.PUBLIC_BACKEND_URL || 'http://localhost:5000/api';
+// Fetch quotes using the reusable function
+const { quotes, totalQuotes, error: fetchError } = await fetchUserQuotes({
+  userId: user!.id,
+  perPage: PER_PAGE,
+  page: currentPage - 1, // Backend expects 0-indexed pages
+  cookieHeader: Astro.request.headers.get('cookie') || '',
+});
 
-interface PaginatedResponse {
-  data: QuoteData[];
-  count: number;
-  page: number;
-  perPage: number;
-}
-
-let quotes: QuoteData[] = [];
-let totalQuotes = 0;
-let fetchError = '';
-
-try {
-  const response = await fetch(
-    `${BACKEND_URL}/quotes/${user!.id}?perPage=${PER_PAGE}&page=${currentPage - 1}`,
-    {
-      headers: {
-        cookie: Astro.request.headers.get('cookie') || '',
-      },
-    }
-  );
-
-  if (!response.ok) {
-    throw new Error(`Backend returned ${response.status}`);
-  }
-
-  const result: PaginatedResponse = await response.json();
-  quotes = result.data;
-  totalQuotes = result.count;
-} catch (error) {
-  console.error('Error fetching quotes:', error);
-  fetchError = 'Failed to load quotes. Please try again later.';
-}
-
-const totalPages = Math.max(1, Math.ceil(totalQuotes / PER_PAGE));
-const showingFrom = totalQuotes === 0 ? 0 : (currentPage - 1) * PER_PAGE + 1;
-const showingTo = Math.min(currentPage * PER_PAGE, totalQuotes);
-
-const getPageNumbers = (): (number | '...')[] => {
-  if (totalPages <= 7) return Array.from({ length: totalPages }, (_, i) => i + 1);
-
-  const pages: (number | '...')[] = [1];
-
-  if (currentPage > 3) pages.push('...');
-
-  const start = Math.max(2, currentPage - 1);
-  const end = Math.min(totalPages - 1, currentPage + 1);
-
-  for (let i = start; i <= end; i++) {
-    pages.push(i);
-  }
-
-  if (currentPage < totalPages - 2) pages.push('...');
-
-  pages.push(totalPages);
-  return pages;
-};
-
-const pageNumbers = getPageNumbers();
+// Calculate pagination metadata
+const { totalPages, showingFrom, showingTo, pageNumbers } = calculatePagination(
+  totalQuotes,
+  currentPage,
+  PER_PAGE
+);
 ---
 
 <Layout title={`${t.quotes.title} - ${t.common.appName}`}>

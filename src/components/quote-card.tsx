@@ -9,7 +9,9 @@ import {
   Calendar,
   Star,
   Share2,
+  ArrowUpRight,
 } from "lucide-react";
+import { useState } from "react";
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
@@ -35,6 +37,7 @@ export interface QuoteData {
   tags: string[] | null;
   createdAt: string;
   bookId: string;
+  userId: string;
   book: QuoteBook | null;
 }
 
@@ -111,6 +114,16 @@ export function QuoteCard({
   const isEditing = editingQuoteId === quote.id;
   const isFavorite = quote.isFavorite;
   const isFavoriteDisabled = !isFavorite && !canAddFavorite;
+  const [showAllTags, setShowAllTags] = useState(false);
+
+  const MAX_TAGS_DISPLAY = 6;
+  const hasTags = quote.tags && quote.tags.length > 0;
+  const hasMoreTags = hasTags && quote.tags!.length > MAX_TAGS_DISPLAY;
+  const displayedTags = hasTags
+    ? showAllTags
+      ? quote.tags!
+      : quote.tags!.slice(0, MAX_TAGS_DISPLAY)
+    : [];
 
   const handleShare = async () => {
     const shareUrl = `${window.location.origin}/quotes/${quote.id}`;
@@ -124,8 +137,6 @@ export function QuoteCard({
       } catch (err) {
         console.error("Error sharing:", err);
       }
-    } else {
-      await navigator.clipboard.writeText(shareUrl);
     }
   };
 
@@ -195,13 +206,19 @@ export function QuoteCard({
             </div>
 
             <div className="space-y-1">
-              <Label className="text-xs text-foreground-subtle">Tags</Label>
+              <div className="flex items-center justify-between">
+                <Label className="text-xs text-foreground-subtle">Tags</Label>
+                <span className="text-xs text-foreground-muted">
+                  {editedFields.tags.length}/10
+                </span>
+              </div>
               <TagsInput
                 value={editedFields.tags}
                 onChange={(tags) =>
                   onSetEditedFields?.({ ...editedFields, tags })
                 }
                 placeholder="Add tags, separated by comma..."
+                maxTags={10}
               />
             </div>
 
@@ -272,7 +289,10 @@ export function QuoteCard({
               <span
                 className="truncate"
                 dangerouslySetInnerHTML={{
-                  __html: highlightMatches(quote.book.authorName, highlightQuery),
+                  __html: highlightMatches(
+                    quote.book.authorName,
+                    highlightQuery,
+                  ),
                 }}
               />
             </div>
@@ -372,23 +392,56 @@ export function QuoteCard({
                   <Trash2 size={16} />
                 </button>
               )}
+
+              {/* View quote button */}
+              <a
+                href={`/quotes/${quote.id}`}
+                className="p-2 text-foreground-muted hover:text-primary hover:bg-primary/10 rounded-lg transition-colors inline-flex items-center justify-center"
+                title={t(locale, "quote.viewQuote")}
+                onClick={(e) => e.stopPropagation()}
+              >
+                <ArrowUpRight size={18} strokeWidth={2} />
+              </a>
             </div>
           )}
         </div>
       )}
 
       {/* Tags - hidden when editing */}
-      {!isEditing && quote.tags && quote.tags.length > 0 && (
-        <div className="flex flex-wrap gap-1.5 border-t border-border pt-3">
-          {quote.tags.map((tag) => (
-            <span
-              key={tag}
-              className="text-[11px] text-foreground-subtle bg-background-muted px-2 py-0.5 rounded-full"
-              dangerouslySetInnerHTML={{
-                __html: `#${highlightMatches(tag, highlightQuery)}`,
+      {!isEditing && hasTags && (
+        <div className="border-t border-border pt-3">
+          <div
+            className="flex flex-wrap gap-1.5 cursor-pointer"
+            onClick={(e) => {
+              e.stopPropagation();
+              if (hasMoreTags) {
+                setShowAllTags(!showAllTags);
+              }
+            }}
+          >
+            {displayedTags.map((tag) => (
+              <span
+                key={tag}
+                className="text-[11px] text-foreground-subtle bg-background-muted px-2 py-0.5 rounded-full"
+                dangerouslySetInnerHTML={{
+                  __html: `#${highlightMatches(tag, highlightQuery)}`,
+                }}
+              />
+            ))}
+          </div>
+          {hasMoreTags && (
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                setShowAllTags(!showAllTags);
               }}
-            />
-          ))}
+              className="text-[10px] text-foreground-muted hover:text-primary transition-colors mt-2"
+            >
+              {showAllTags
+                ? t(locale, "quote.showLess")
+                : t(locale, "quote.showMore")}
+            </button>
+          )}
         </div>
       )}
     </div>
