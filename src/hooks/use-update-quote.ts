@@ -14,7 +14,7 @@ export interface UpdateQuotePayload {
 }
 
 async function updateQuote(userId: string, quoteId: string, payload: UpdateQuotePayload) {
-  return api.patch(`/quotes/${userId}?quoteId=${quoteId}`, payload);
+  return api.patch(`/quotes/user/${userId}?quoteId=${quoteId}`, payload);
 }
 
 export function useUpdateQuote() {

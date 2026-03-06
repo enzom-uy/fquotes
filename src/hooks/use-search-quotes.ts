@@ -35,7 +35,7 @@ async function searchQuotes(
 ): Promise<QuoteSearchResult[]> {
   try {
     return await api.get<QuoteSearchResult[]>(
-      `/quotes/${userId}/search?query=${encodeURIComponent(query)}`,
+      `/quotes/user/${userId}/search?query=${encodeURIComponent(query)}`,
     );
   } catch (error) {
     handleApiError(error, "Failed to search quotes");

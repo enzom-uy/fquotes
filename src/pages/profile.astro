@@ -51,13 +51,13 @@ let error = false
 
 try {
   const [countRes, favoritesRes, recentRes] = await Promise.all([
-    fetch(`${BACKEND_URL}/quotes/${user.id}/count`, {
+    fetch(`${BACKEND_URL}/quotes/user/${user.id}/count`, {
       headers: { cookie: cookieHeader },
     }),
-    fetch(`${BACKEND_URL}/quotes/${user.id}/favorites`, {
+    fetch(`${BACKEND_URL}/quotes/user/${user.id}/favorites`, {
       headers: { cookie: cookieHeader },
     }),
-    fetch(`${BACKEND_URL}/quotes/${user.id}?perPage=6&page=0`, {
+    fetch(`${BACKEND_URL}/quotes/user/${user.id}?perPage=6&page=0`, {
       headers: { cookie: cookieHeader },
     }),
   ])

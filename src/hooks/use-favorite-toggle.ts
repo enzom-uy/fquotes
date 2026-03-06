@@ -26,7 +26,7 @@ export function useFavoriteToggle({
 
   const mutation = useMutation({
     mutationFn: async ({ quoteId, isFavorite }: { quoteId: string; isFavorite: boolean }) => {
-      return api.patch(`/quotes/${userId}?quoteId=${quoteId}`, { isFavorite });
+      return api.patch(`/quotes/user/${userId}?quoteId=${quoteId}`, { isFavorite });
     },
     onMutate: ({ quoteId }) => {
       setPendingId(quoteId);

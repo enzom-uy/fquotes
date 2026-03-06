@@ -8,7 +8,7 @@ interface DeleteQuotesParams {
 }
 
 async function deleteQuotes({ userId, quotesIds }: DeleteQuotesParams) {
-  return api.delete(`/quotes/${userId}`, { quotesIds });
+  return api.delete(`/quotes/user/${userId}`, { quotesIds });
 }
 
 export function useDeleteQuotes() {
