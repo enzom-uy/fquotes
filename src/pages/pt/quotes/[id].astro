@@ -53,6 +53,7 @@ try {
 }
 
 const { session } = Astro.locals
+const user = Astro.locals.user
 const userId = session?.userId
 const userIsOwner = userId && quote ? userId === quote.userId : false
 
@@ -85,6 +86,8 @@ const pageTitle = quote
       quoteAuthor={quoteAuthor}
       locale={locale} 
       userIsOwner={userIsOwner}
+      currentUserName={user?.name}
+      currentUserImage={user?.image}
       client:only="react"
     />
   ) : null}

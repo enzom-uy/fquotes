@@ -93,6 +93,17 @@
       "defaultVisibilityHelp": "New quotes will be set as {visibility} by default.",
       "public": "Public",
       "private": "Private"
+    },
+    "share": {
+      "title": "Sharing",
+      "includeUsername": "Include my username when sharing a quote",
+      "includeUsernameHelp": "Your display name will appear on the shared image.",
+      "includeProfilePhoto": "Include my profile photo when sharing a quote",
+      "includeProfilePhotoHelp": "Your profile picture will appear on the shared image."
+    },
+    "shareDialog": {
+      "includeUsername": "Include my name",
+      "includePhoto": "Include my photo"
     }
   },
   "createProfile": {
@@ -194,6 +205,16 @@
     "tags": "Tags",
     "addTag": "Add tag",
     "share": "Share",
+    "shareQuote": "Share Quote",
+    "background": "Background",
+    "format": "Format",
+    "highQuality": "High quality",
+    "smallerSize": "Smaller size",
+    "downloadImage": "Download Image",
+    "copyLink": "Copy Link",
+    "linkCopied": "Link Copied!",
+    "generating": "Generating...",
+    "errorGeneratingImage": "Failed to generate image. Please try again.",
     "favorite": "Favorite",
     "edit": "Edit",
     "delete": "Delete",

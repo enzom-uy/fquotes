@@ -11,7 +11,7 @@ import {
   Share2,
   ArrowUpRight,
 } from "lucide-react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
@@ -19,6 +19,7 @@ import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { BookSearch, type BookResult } from "@/components/capture/book-search";
 import { TagsInput } from "@/components/tags-input";
+import { ShareQuoteDialog } from "@/components/share-quote-dialog";
 import { t, type Locale } from "@/i18n";
 
 interface QuoteBook {
@@ -73,6 +74,8 @@ interface QuoteCardProps {
   onToggleFavorite?: (quoteId: string, isFavorite: boolean) => void;
   isTogglingFavorite?: boolean;
   canAddFavorite?: boolean;
+  userName?: string | null;
+  userImage?: string | null;
   locale?: Locale;
 }
 
@@ -109,12 +112,22 @@ export function QuoteCard({
   onToggleFavorite,
   isTogglingFavorite = false,
   canAddFavorite = true,
+  userName,
+  userImage,
   locale = "en",
 }: QuoteCardProps) {
   const isEditing = editingQuoteId === quote.id;
   const isFavorite = quote.isFavorite;
   const isFavoriteDisabled = !isFavorite && !canAddFavorite;
   const [showAllTags, setShowAllTags] = useState(false);
+  const [shareDialogOpen, setShareDialogOpen] = useState(false);
+
+  // Preload book cover so it's cached before the share dialog opens
+  useEffect(() => {
+    if (!quote.book?.coverUrl) return;
+    const img = new Image();
+    img.src = quote.book.coverUrl;
+  }, [quote.book?.coverUrl]);
 
   const MAX_TAGS_DISPLAY = 6;
   const hasTags = quote.tags && quote.tags.length > 0;
@@ -126,18 +139,7 @@ export function QuoteCard({
     : [];
 
   const handleShare = async () => {
-    const shareUrl = `${window.location.origin}/quotes/${quote.id}`;
-    if (navigator.share) {
-      try {
-        await navigator.share({
-          title: t(locale, "quote.share"),
-          text: `"${quote.text}" - ${quote.book?.title || "Unknown"}`,
-          url: shareUrl,
-        });
-      } catch (err) {
-        // User cancelled share or browser doesn't support
-      }
-    }
+    setShareDialogOpen(true);
   };
 
   return (
@@ -362,14 +364,16 @@ export function QuoteCard({
                 </button>
               )}
 
-              {/* Share button */}
-              <button
-                onClick={handleShare}
-                className="p-2 text-foreground-muted hover:text-primary hover:bg-primary/10 rounded-lg transition-colors"
-                title="Share"
-              >
-                <Share2 size={16} />
-              </button>
+              {/* Share button — visible for public quotes (anyone) or private quotes (owner only) */}
+              {(quote.isPublic || editable) && (
+                <button
+                  onClick={handleShare}
+                  className="p-2 text-foreground-muted hover:text-primary hover:bg-primary/10 rounded-lg transition-colors"
+                  title="Share"
+                >
+                  <Share2 size={16} />
+                </button>
+              )}
 
               {/* Edit button - only if editable */}
               {editable && onStartEdit && (
@@ -444,6 +448,20 @@ export function QuoteCard({
           )}
         </div>
       )}
+
+      {/* Share Dialog */}
+      <ShareQuoteDialog
+        open={shareDialogOpen}
+        onOpenChange={setShareDialogOpen}
+        quote={quote.text}
+        bookTitle={quote.book?.title || "Unknown"}
+        authorName={quote.book?.authorName}
+        coverUrl={quote.book?.coverUrl}
+        quoteId={quote.id}
+        userName={userName}
+        userImage={userImage}
+        t={(key) => key.startsWith('settings.') ? t(locale, key) : t(locale, `quote.${key}`)}
+      />
     </div>
   );
 }

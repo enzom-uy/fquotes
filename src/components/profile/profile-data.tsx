@@ -16,6 +16,8 @@ export interface ProfileDataProps {
   initialFavoriteQuotes: QuoteData[] | undefined;
   initialRecentQuotes: QuoteData[] | undefined;
   userId: string;
+  currentUserName?: string | null;
+  currentUserImage?: string | null;
   error: boolean;
   locale?: Locale;
 }
@@ -26,6 +28,8 @@ function ProfileData({
   initialFavoriteQuotes,
   initialRecentQuotes,
   userId,
+  currentUserName,
+  currentUserImage,
   error,
   locale = "en",
 }: ProfileDataProps) {
@@ -177,6 +181,8 @@ function ProfileData({
                 onToggleFavorite={handleToggleFavorite}
                 isTogglingFavorite={pendingFavoriteId === quote.id}
                 canAddFavorite={canAddFavorite}
+                userName={currentUserName}
+                userImage={currentUserImage}
                 locale={locale}
               />
             ))}
@@ -221,6 +227,8 @@ function ProfileData({
                 onToggleFavorite={handleToggleFavorite}
                 isTogglingFavorite={pendingFavoriteId === quote.id}
                 canAddFavorite={canAddFavorite}
+                userName={currentUserName}
+                userImage={currentUserImage}
                 locale={locale}
               />
             ))}

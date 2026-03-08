@@ -93,6 +93,17 @@
       "defaultVisibilityHelp": "Novas citações serão definidas como {visibility} por padrão.",
       "public": "Público",
       "private": "Privado"
+    },
+    "share": {
+      "title": "Compartilhamento",
+      "includeUsername": "Incluir meu nome de usuário ao compartilhar uma citação",
+      "includeUsernameHelp": "Seu nome de exibição aparecerá na imagem compartilhada.",
+      "includeProfilePhoto": "Incluir minha foto de perfil ao compartilhar uma citação",
+      "includeProfilePhotoHelp": "Sua foto de perfil aparecerá na imagem compartilhada."
+    },
+    "shareDialog": {
+      "includeUsername": "Incluir meu nome",
+      "includePhoto": "Incluir minha foto"
     }
   },
   "createProfile": {
@@ -194,6 +205,16 @@
     "tags": "Tags",
     "addTag": "Adicionar tag",
     "share": "Compartilhar",
+    "shareQuote": "Compartilhar Citação",
+    "background": "Fundo",
+    "format": "Formato",
+    "highQuality": "Alta qualidade",
+    "smallerSize": "Tamanho menor",
+    "downloadImage": "Baixar Imagem",
+    "copyLink": "Copiar Link",
+    "linkCopied": "Link Copiado!",
+    "generating": "Gerando...",
+    "errorGeneratingImage": "Falha ao gerar imagem. Por favor, tente novamente.",
     "favorite": "Favorito",
     "edit": "Editar",
     "delete": "Excluir",

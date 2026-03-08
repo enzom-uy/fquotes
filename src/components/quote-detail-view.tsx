@@ -8,8 +8,10 @@ import {
   Share2,
   ArrowLeft,
 } from "lucide-react";
+import { useState, useEffect } from "react";
 import { t, type Locale } from "@/i18n";
 import type { QuoteData } from "@/components/quote-card";
+import { ShareQuoteDialog } from "@/components/share-quote-dialog";
 
 interface QuoteAuthor {
   id: string;
@@ -22,6 +24,8 @@ interface QuoteDetailViewProps {
   quoteAuthor: QuoteAuthor | null;
   locale: Locale;
   userIsOwner: boolean;
+  currentUserName?: string | null;
+  currentUserImage?: string | null;
 }
 
 const formatDate = (dateString: string, locale: Locale) => {
@@ -43,22 +47,20 @@ export function QuoteDetailView({
   quoteAuthor,
   locale,
   userIsOwner,
+  currentUserName,
+  currentUserImage,
 }: QuoteDetailViewProps) {
+  const [shareDialogOpen, setShareDialogOpen] = useState(false);
+
+  // Preload book cover so it's cached before the share dialog opens
+  useEffect(() => {
+    if (!quote.book?.coverUrl) return;
+    const img = new Image();
+    img.src = quote.book.coverUrl;
+  }, [quote.book?.coverUrl]);
+
   const handleShare = async () => {
-    const shareUrl = `${window.location.origin}${window.location.pathname}`;
-    if (navigator.share) {
-      try {
-        await navigator.share({
-          title: t(locale, "quote.share"),
-          text: `"${quote.text}" - ${quote.book?.title || "Unknown"}`,
-          url: shareUrl,
-        });
-      } catch (err) {
-        // User cancelled share or browser doesn't support
-      }
-    } else {
-      await navigator.clipboard.writeText(shareUrl);
-    }
+    setShareDialogOpen(true);
   };
 
   return (
@@ -175,14 +177,16 @@ export function QuoteDetailView({
               )}
             </div>
 
-            {/* Share button */}
-            <button
-              onClick={handleShare}
-              className="flex items-center gap-2 px-4 py-2 bg-primary text-background rounded-lg hover:opacity-90 transition-opacity"
-            >
-              <Share2 size={18} />
-              <span>{t(locale, "quote.share")}</span>
-            </button>
+            {/* Share button — visible for public quotes (anyone) or private quotes (owner only) */}
+            {(quote.isPublic || userIsOwner) && (
+              <button
+                onClick={handleShare}
+                className="flex items-center gap-2 px-4 py-2 bg-primary text-background rounded-lg hover:opacity-90 transition-opacity"
+              >
+                <Share2 size={18} />
+                <span>{t(locale, "quote.share")}</span>
+              </button>
+            )}
           </div>
 
           {/* Quote author section */}
@@ -216,6 +220,20 @@ export function QuoteDetailView({
           )}
         </div>
       </div>
+
+      {/* Share Dialog */}
+      <ShareQuoteDialog
+        open={shareDialogOpen}
+        onOpenChange={setShareDialogOpen}
+        quote={quote.text}
+        bookTitle={quote.book?.title || "Unknown"}
+        authorName={quote.book?.authorName}
+        coverUrl={quote.book?.coverUrl}
+        quoteId={quote.id}
+        userName={currentUserName}
+        userImage={currentUserImage}
+        t={(key) => key.startsWith('settings.') ? t(locale, key) : t(locale, `quote.${key}`)}
+      />
     </div>
   );
 }

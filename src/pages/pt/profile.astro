@@ -104,6 +104,8 @@ try {
         initialFavoriteQuotes={error ? undefined : (favoriteQuotes.length > 0 ? favoriteQuotes : [])}
         initialRecentQuotes={recentQuotes.length > 0 ? recentQuotes : []}
         userId={user.id}
+        currentUserName={user.name}
+        currentUserImage={user.image || null}
         error={error}
         locale={locale}
       />

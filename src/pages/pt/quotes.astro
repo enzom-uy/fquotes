@@ -48,6 +48,8 @@ const { totalPages, showingFrom, showingTo, pageNumbers } = calculatePagination(
         <QuotesManager
           client:load
           userId={user!.id}
+          userName={user!.name}
+          userImage={user!.image}
           quotes={quotes}
           pagination={{
             currentPage,

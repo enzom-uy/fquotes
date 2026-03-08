@@ -31,6 +31,8 @@ export interface PaginationInfo {
 
 export interface QuotesManagerProps {
   userId: string;
+  userName?: string | null;
+  userImage?: string | null;
   quotes: QuoteData[];
   pagination: PaginationInfo;
   fetchError: string;

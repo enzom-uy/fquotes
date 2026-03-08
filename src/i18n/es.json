@@ -93,6 +93,17 @@
       "defaultVisibilityHelp": "Las nuevas citas se establecerán como {visibility} por defecto.",
       "public": "Público",
       "private": "Privado"
+    },
+    "share": {
+      "title": "Compartir",
+      "includeUsername": "Incluir mi nombre de usuario al compartir una cita",
+      "includeUsernameHelp": "Tu nombre de usuario aparecerá en la imagen compartida.",
+      "includeProfilePhoto": "Incluir mi foto de perfil al compartir una cita",
+      "includeProfilePhotoHelp": "Tu foto de perfil aparecerá en la imagen compartida."
+    },
+    "shareDialog": {
+      "includeUsername": "Incluir mi nombre",
+      "includePhoto": "Incluir mi foto"
     }
   },
   "createProfile": {
@@ -194,6 +205,16 @@
     "tags": "Etiquetas",
     "addTag": "Añadir etiqueta",
     "share": "Compartir",
+    "shareQuote": "Compartir Cita",
+    "background": "Fondo",
+    "format": "Formato",
+    "highQuality": "Alta calidad",
+    "smallerSize": "Tamaño más pequeño",
+    "downloadImage": "Descargar Imagen",
+    "copyLink": "Copiar Enlace",
+    "linkCopied": "¡Enlace Copiado!",
+    "generating": "Generando...",
+    "errorGeneratingImage": "Error al generar la imagen. Por favor, inténtelo de nuevo.",
     "favorite": "Favorito",
     "edit": "Editar",
     "delete": "Eliminar",

@@ -54,6 +54,8 @@ export const QuotesManager = (props: QuotesManagerProps) => (
 
 const QuotesManagerInner = ({
   userId,
+  userName,
+  userImage,
   quotes: initialQuotes,
   pagination,
   fetchError,
@@ -546,6 +548,8 @@ const QuotesManagerInner = ({
               onToggleFavorite={handleToggleFavorite}
               isTogglingFavorite={pendingFavoriteId === quote.id}
               canAddFavorite={canAddFavorite}
+              userName={userName}
+              userImage={userImage}
               locale={locale}
             />
           ))}

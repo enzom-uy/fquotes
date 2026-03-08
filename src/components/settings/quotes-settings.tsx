@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Globe, Lock, Globe2 } from "lucide-react";
+import { Globe, Lock, Globe2, Share2 } from "lucide-react";
 import {
   Select,
   SelectContent,
@@ -10,6 +10,8 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Switch } from "@/components/ui/switch";
+import { Label } from "@/components/ui/label";
 import { t, type Locale } from "@/i18n";
 
 const OCR_LANGUAGES_LIST = [
@@ -43,6 +45,8 @@ const OCR_LANGUAGES_LIST = [
 
 const LANGUAGE_STORAGE_KEY = "fquotes-ocr-language";
 const DEFAULT_PUBLIC_KEY = "fquotes-default-public";
+const SHARE_INCLUDE_USERNAME_KEY = "fquotes-share-include-username";
+const SHARE_INCLUDE_PHOTO_KEY = "fquotes-share-include-photo";
 
 interface QuotesSettingsProps {
   locale?: Locale;
@@ -51,6 +55,8 @@ interface QuotesSettingsProps {
 export function QuotesSettings({ locale = "en" }: QuotesSettingsProps) {
   const [ocrLanguage, setOcrLanguage] = useState("spa");
   const [defaultIsPublic, setDefaultIsPublic] = useState(false);
+  const [shareIncludeUsername, setShareIncludeUsername] = useState(false);
+  const [shareIncludePhoto, setShareIncludePhoto] = useState(false);
 
   useEffect(() => {
     const savedLang = localStorage.getItem(LANGUAGE_STORAGE_KEY);
@@ -62,6 +68,16 @@ export function QuotesSettings({ locale = "en" }: QuotesSettingsProps) {
     if (savedDefaultPublic !== null) {
       setDefaultIsPublic(savedDefaultPublic === "true");
     }
+
+    const savedShareUsername = localStorage.getItem(SHARE_INCLUDE_USERNAME_KEY);
+    if (savedShareUsername !== null) {
+      setShareIncludeUsername(savedShareUsername === "true");
+    }
+
+    const savedSharePhoto = localStorage.getItem(SHARE_INCLUDE_PHOTO_KEY);
+    if (savedSharePhoto !== null) {
+      setShareIncludePhoto(savedSharePhoto === "true");
+    }
   }, []);
 
   const handleLanguageChange = (value: string) => {
@@ -72,6 +88,16 @@ export function QuotesSettings({ locale = "en" }: QuotesSettingsProps) {
   const handleDefaultVisibilityChange = (isPublic: boolean) => {
     setDefaultIsPublic(isPublic);
     localStorage.setItem(DEFAULT_PUBLIC_KEY, String(isPublic));
+  };
+
+  const handleShareUsernameChange = (checked: boolean) => {
+    setShareIncludeUsername(checked);
+    localStorage.setItem(SHARE_INCLUDE_USERNAME_KEY, String(checked));
+  };
+
+  const handleSharePhotoChange = (checked: boolean) => {
+    setShareIncludePhoto(checked);
+    localStorage.setItem(SHARE_INCLUDE_PHOTO_KEY, String(checked));
   };
 
   return (
@@ -145,6 +171,43 @@ export function QuotesSettings({ locale = "en" }: QuotesSettingsProps) {
                 : t(locale, "settings.quotes.private").toLowerCase(),
             })}
           </p>
+        </div>
+
+        {/* Sharing Settings */}
+        <div>
+          <label className="text-sm font-medium flex items-center gap-2 mb-3">
+            <Share2 size={16} />
+            {t(locale, "settings.share.title")}
+          </label>
+          <div className="space-y-4">
+            <div className="flex items-center justify-between">
+              <Label htmlFor="share-username" className="text-sm cursor-pointer flex-1 pr-4">
+                {t(locale, "settings.share.includeUsername")}
+              </Label>
+              <Switch
+                id="share-username"
+                checked={shareIncludeUsername}
+                onCheckedChange={handleShareUsernameChange}
+              />
+            </div>
+            <p className="text-xs text-foreground-muted -mt-2">
+              {t(locale, "settings.share.includeUsernameHelp")}
+            </p>
+
+            <div className="flex items-center justify-between">
+              <Label htmlFor="share-photo" className="text-sm cursor-pointer flex-1 pr-4">
+                {t(locale, "settings.share.includeProfilePhoto")}
+              </Label>
+              <Switch
+                id="share-photo"
+                checked={shareIncludePhoto}
+                onCheckedChange={handleSharePhotoChange}
+              />
+            </div>
+            <p className="text-xs text-foreground-muted -mt-2">
+              {t(locale, "settings.share.includeProfilePhotoHelp")}
+            </p>
+          </div>
         </div>
       </CardContent>
     </Card>
