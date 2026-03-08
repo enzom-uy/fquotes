@@ -116,43 +116,49 @@ const CaptureImageInner = ({ locale = "en" }: CaptureImageProps) => {
     localStorage.setItem(STORAGE_KEY, ocrLanguage);
   }, [ocrLanguage]);
 
-  const handleFileSelect = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
-    const files = e.target.files;
-    if (files && files.length > 0) {
-      Array.from(files).forEach((file) => {
-        const reader = new FileReader();
-        reader.onload = (event) => {
-          const imageData = event.target?.result as string;
-          setCapturedImages((prev) => [
-            ...prev,
-            {
-              id: crypto.randomUUID(),
-              originalData: imageData,
-              croppedData: null,
-            },
-          ]);
-        };
-        reader.readAsDataURL(file);
-      });
-      e.target.value = "";
-    }
-  }, []);
+  const handleFileSelect = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      const files = e.target.files;
+      if (files && files.length > 0) {
+        Array.from(files).forEach((file) => {
+          const reader = new FileReader();
+          reader.onload = (event) => {
+            const imageData = event.target?.result as string;
+            setCapturedImages((prev) => [
+              ...prev,
+              {
+                id: crypto.randomUUID(),
+                originalData: imageData,
+                croppedData: null,
+              },
+            ]);
+          };
+          reader.readAsDataURL(file);
+        });
+        e.target.value = "";
+      }
+    },
+    [],
+  );
 
   const handleRemoveImage = useCallback((id: string) => {
     setCapturedImages((prev) => prev.filter((img) => img.id !== id));
   }, []);
 
-  const handleCropComplete = useCallback((croppedImage: string) => {
-    if (!croppingImageId) return;
-    setCapturedImages((prev) =>
-      prev.map((img) =>
-        img.id === croppingImageId
-          ? { ...img, croppedData: croppedImage }
-          : img,
-      ),
-    );
-    setCroppingImageId(null);
-  }, [croppingImageId]);
+  const handleCropComplete = useCallback(
+    (croppedImage: string) => {
+      if (!croppingImageId) return;
+      setCapturedImages((prev) =>
+        prev.map((img) =>
+          img.id === croppingImageId
+            ? { ...img, croppedData: croppedImage }
+            : img,
+        ),
+      );
+      setCroppingImageId(null);
+    },
+    [croppingImageId],
+  );
 
   const handleProcess = async () => {
     setIsProcessing(true);
@@ -374,8 +380,9 @@ const CaptureImageInner = ({ locale = "en" }: CaptureImageProps) => {
                   : t(locale, "capture.preview")}
               </h2>
               <p className="text-sm text-foreground-muted">
-                {capturedImages.length} image
-                {capturedImages.length !== 1 ? "s" : ""} selected
+                {capturedImages.length === 1
+                  ? t(locale, "capture.imagesSelected").replace("{count}", "1")
+                  : t(locale, "capture.imagesSelectedPlural").replace("{count}", String(capturedImages.length))}
               </p>
             </div>
             {quotesMetadata.length === 0 && (
@@ -399,28 +406,28 @@ const CaptureImageInner = ({ locale = "en" }: CaptureImageProps) => {
                 >
                   <img
                     src={image.croppedData || image.originalData}
-                    alt="Captured"
+                    alt={t(locale, "capture.imageAlt")}
                     className="w-full h-full object-cover"
                   />
                   {image.croppedData && (
                     <div className="absolute bottom-2 left-2 px-2 py-0.5 bg-primary/80 text-xs text-white rounded">
-                      Cropped
+                      {t(locale, "capture.cropped")}
                     </div>
                   )}
-                  <div className="absolute top-2 right-2 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                  <div className="absolute bottom-2 right-2 flex gap-1">
                     <button
                       onClick={() => setCroppingImageId(image.id)}
                       className="p-1.5 bg-background/80 backdrop-blur-sm hover:bg-primary text-foreground hover:text-white rounded-lg transition-all"
                       title={t(locale, "capture.cropImage")}
                     >
-                      <Crop size={14} />
+                      <Crop size={20} />
                     </button>
                     <button
                       onClick={() => handleRemoveImage(image.id)}
                       className="p-1.5 bg-background/80 backdrop-blur-sm hover:bg-danger/90 text-danger hover:text-background border border-border hover:border-danger rounded-lg transition-all"
                       title={t(locale, "capture.removeImage")}
                     >
-                      <Trash2 size={14} />
+                      <Trash2 size={18} />
                     </button>
                   </div>
                 </div>
@@ -436,7 +443,7 @@ const CaptureImageInner = ({ locale = "en" }: CaptureImageProps) => {
                   className="text-foreground-muted group-hover:text-primary transition-colors"
                 />
                 <span className="text-sm text-foreground-muted group-hover:text-primary transition-colors">
-                  Add More
+                  {t(locale, "capture.addMore")}
                 </span>
               </button>
             </div>
@@ -447,7 +454,9 @@ const CaptureImageInner = ({ locale = "en" }: CaptureImageProps) => {
             <Globe size={18} className="text-foreground-muted" />
             <Select value={ocrLanguage} onValueChange={setOcrLanguage}>
               <SelectTrigger className="flex-1">
-                <SelectValue placeholder={t(locale, "capture.selectLanguage")} />
+                <SelectValue
+                  placeholder={t(locale, "capture.selectLanguage")}
+                />
               </SelectTrigger>
               <SelectContent>
                 {OCR_LANGUAGES.map((lang) => (
@@ -471,7 +480,10 @@ const CaptureImageInner = ({ locale = "en" }: CaptureImageProps) => {
                   <>
                     <div className="w-5 h-5 border-2 border-background/20 border-t-background rounded-full animate-spin" />
                     {t(locale, "capture.processingProgress")
-                      .replace("{current}", processingProgress.current.toString())
+                      .replace(
+                        "{current}",
+                        processingProgress.current.toString(),
+                      )
                       .replace("{total}", processingProgress.total.toString())}
                   </>
                 ) : (
@@ -534,12 +546,12 @@ const CaptureImageInner = ({ locale = "en" }: CaptureImageProps) => {
                             capturedImages[index]?.croppedData ||
                             capturedImages[index]?.originalData
                           }
-                          alt={`Quote ${index + 1}`}
+                          alt={t(locale, "capture.quoteImageAlt").replace("{number}", String(index + 1))}
                           className="w-full h-full object-cover"
                         />
                         <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors flex items-center justify-center">
                           <span className="text-white opacity-0 group-hover:opacity-100 transition-opacity text-sm font-medium bg-black/50 px-3 py-1.5 rounded-lg">
-                            Click to enlarge
+                            {t(locale, "capture.clickToEnlarge")}
                           </span>
                         </div>
                       </button>
@@ -550,7 +562,7 @@ const CaptureImageInner = ({ locale = "en" }: CaptureImageProps) => {
                           capturedImages[index]?.croppedData ||
                           capturedImages[index]?.originalData
                         }
-                        alt={`Quote ${index + 1} - Full size`}
+                        alt={t(locale, "capture.quoteImageFullAlt").replace("{number}", String(index + 1))}
                         className="w-full h-full object-contain"
                       />
                     </DialogContent>
@@ -592,10 +604,12 @@ const CaptureImageInner = ({ locale = "en" }: CaptureImageProps) => {
           {quotesMetadata.length === 0 && (
             <div className="bg-background-elevated border border-background-muted rounded-lg p-4">
               <p className="text-sm text-foreground-muted">
-                <span className="text-primary font-semibold">Next step:</span>{" "}
+                <span className="text-primary font-semibold">{t(locale, "capture.nextStep")}</span>{" "}
                 {t(locale, "capture.clickExtract")}{" "}
-                {capturedImages.length > 1 ? "all images" : "the image"} with
-                OCR.
+                {capturedImages.length > 1
+                  ? t(locale, "capture.processImages")
+                  : t(locale, "capture.processImage")}{" "}
+                {t(locale, "capture.withOcr")}
               </p>
             </div>
           )}
@@ -642,7 +656,9 @@ const CaptureImageInner = ({ locale = "en" }: CaptureImageProps) => {
       <div className="flex flex-col gap-6">
         {/* Title */}
         <div className="text-center">
-          <h2 className="text-3xl font-bold mb-2">{t(locale, "capture.title")}</h2>
+          <h2 className="text-3xl font-bold mb-2">
+            {t(locale, "capture.title")}
+          </h2>
           <p className="text-foreground-muted">
             {t(locale, "capture.subtitle")}
           </p>
@@ -659,7 +675,9 @@ const CaptureImageInner = ({ locale = "en" }: CaptureImageProps) => {
               <Camera size={32} className="text-primary" />
             </div>
             <div className="text-center">
-              <h3 className="text-lg font-semibold mb-1">{t(locale, "capture.useCameraTitle")}</h3>
+              <h3 className="text-lg font-semibold mb-1">
+                {t(locale, "capture.useCameraTitle")}
+              </h3>
               <p className="text-sm text-foreground-subtle">
                 {t(locale, "capture.useCameraDescription")}
               </p>
@@ -675,7 +693,9 @@ const CaptureImageInner = ({ locale = "en" }: CaptureImageProps) => {
               <Upload size={32} className="text-accent" />
             </div>
             <div className="text-center">
-              <h3 className="text-lg font-semibold mb-1">{t(locale, "capture.uploadImagesTitle")}</h3>
+              <h3 className="text-lg font-semibold mb-1">
+                {t(locale, "capture.uploadImagesTitle")}
+              </h3>
               <p className="text-sm text-foreground-subtle">
                 {t(locale, "capture.uploadImagesDescription")}
               </p>
