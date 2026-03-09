@@ -32,7 +32,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "./ui/dropdown-menu";
-import { toast } from "@/hooks/use-toast";
+import { dispatchToastEvent } from "@/components/global-toast-manager";
 import {
   type QuotesManagerProps,
   type QuoteData,
@@ -155,12 +155,11 @@ const QuotesManagerInner = ({
 
   const handleToggleFavorite = (quoteId: string, newIsFavorite: boolean) => {
     if (newIsFavorite && !canAddFavorite) {
-      toast({
-        title: t(locale, "quotesManager.maxFavoritesReached"),
-        description: t(locale, "quotesManager.maxFavoritesDescription", {
-          max: MAX_FAVORITES.toString(),
-        }),
+      dispatchToastEvent({
+        titleKey: "quotesManager.maxFavoritesReached",
+        descriptionKey: "quotesManager.maxFavoritesDescription",
         variant: "destructive",
+        interpolations: { max: MAX_FAVORITES.toString() },
       });
       return;
     }
@@ -205,13 +204,11 @@ const QuotesManagerInner = ({
           if (bulkMode && idsToDelete.length > 0) {
             setBulkMode(false);
           }
-          toast({
-            title:
-              idsToDelete.length === 1
-                ? t(locale, "quotesManager.quoteDeleted")
-                : t(locale, "quotesManager.quotesDeletedCount", {
-                    count: idsToDelete.length.toString(),
-                  }),
+          dispatchToastEvent({
+            titleKey: idsToDelete.length === 1
+              ? "quotesManager.quoteDeleted"
+              : "quotesManager.quotesDeletedCount",
+            interpolations: { count: idsToDelete.length.toString() },
           });
           if (isSearchActive) {
             const q = activeQuery;
@@ -220,9 +217,9 @@ const QuotesManagerInner = ({
           }
         },
         onError: () => {
-          toast({
-            title: t(locale, "common.error"),
-            description: t(locale, "quotesManager.deleteError"),
+          dispatchToastEvent({
+            titleKey: "common.error",
+            descriptionKey: "quotesManager.deleteError",
             variant: "destructive",
           });
           setDeleteTarget(null);
@@ -359,12 +356,12 @@ const QuotesManagerInner = ({
 
           setEditingQuoteId(null);
           setEditedFields(null);
-          toast({ title: t(locale, "quotesManager.quoteUpdated") });
+          dispatchToastEvent({ titleKey: "quotesManager.quoteUpdated" });
         },
         onError: () => {
-          toast({
-            title: t(locale, "common.error"),
-            description: t(locale, "quotesManager.updateError"),
+          dispatchToastEvent({
+            titleKey: "common.error",
+            descriptionKey: "quotesManager.updateError",
             variant: "destructive",
           });
         },

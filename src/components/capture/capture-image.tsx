@@ -23,8 +23,8 @@ import { createWorker, createScheduler } from "tesseract.js";
 import { EditableQuoteCard, type QuoteMetadata } from "./editable-quote-card";
 import { BookSearch, type BookResult } from "./book-search";
 import { Dialog, DialogContent, DialogTrigger } from "../ui/dialog";
-import { useToast } from "@/hooks/use-toast";
 import { useSession } from "@/lib/auth-client";
+import { dispatchToastEvent } from "@/components/global-toast-manager";
 import { QuoteSkeletons } from "./quote-skeleton";
 import { useSaveQuotes, buildQuotePayloads } from "@/hooks/use-save-quotes";
 import { QueryProvider } from "../query-provider";
@@ -93,7 +93,6 @@ const CaptureImageInner = ({ locale = "en" }: CaptureImageProps) => {
   const [bookErrors, setBookErrors] = useState<(string | null)[]>([]);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const cameraInputRef = useRef<HTMLInputElement>(null);
-  const { toast } = useToast();
   const { data: session } = useSession();
   const saveQuotesMutation = useSaveQuotes();
 
@@ -238,25 +237,21 @@ const CaptureImageInner = ({ locale = "en" }: CaptureImageProps) => {
       setIsProcessing(false);
 
       // Show success toast
-      toast({
-        title: t(locale, "capture.processingComplete"),
-        description: t(locale, "capture.successfullyExtracted").replace(
-          "{count}",
-          capturedImages.length.toString(),
-        ),
+      dispatchToastEvent({
+        titleKey: "capture.processingComplete",
+        descriptionKey: "capture.successfullyExtracted",
         variant: "success",
+        interpolations: { count: capturedImages.length.toString() },
       });
     } catch (error) {
       setIsProcessing(false);
 
       // Show error toast
-      toast({
-        title: t(locale, "capture.processingFailed"),
-        description: t(locale, "capture.errorProcessing").replace(
-          "{error}",
-          String(error),
-        ),
+      dispatchToastEvent({
+        titleKey: "capture.processingFailed",
+        descriptionKey: "capture.errorProcessing",
         variant: "destructive",
+        interpolations: { error: String(error) },
       });
     }
   };
@@ -282,9 +277,9 @@ const CaptureImageInner = ({ locale = "en" }: CaptureImageProps) => {
 
   const handleSaveQuotes = async () => {
     if (!session?.user?.id) {
-      toast({
-        title: t(locale, "capture.notAuthenticated"),
-        description: t(locale, "capture.signInRequired"),
+      dispatchToastEvent({
+        titleKey: "capture.notAuthenticated",
+        descriptionKey: "capture.signInRequired",
         variant: "destructive",
       });
       return;
@@ -295,9 +290,9 @@ const CaptureImageInner = ({ locale = "en" }: CaptureImageProps) => {
     // Validate that all quotes have text
     const emptyQuotes = quotesMetadata.filter((q) => !q.text.trim());
     if (emptyQuotes.length > 0) {
-      toast({
-        title: t(locale, "capture.emptyQuotes"),
-        description: t(locale, "capture.emptyQuotesDesc"),
+      dispatchToastEvent({
+        titleKey: "capture.emptyQuotes",
+        descriptionKey: "capture.emptyQuotesDesc",
         variant: "destructive",
       });
       return;
@@ -309,9 +304,9 @@ const CaptureImageInner = ({ locale = "en" }: CaptureImageProps) => {
     );
     if (newBookErrors.some((e) => e !== null)) {
       setBookErrors(newBookErrors);
-      toast({
-        title: t(locale, "capture.missingBookSelection"),
-        description: t(locale, "capture.missingBookDesc"),
+      dispatchToastEvent({
+        titleKey: "capture.missingBookSelection",
+        descriptionKey: "capture.missingBookDesc",
         variant: "destructive",
       });
       return;
@@ -325,24 +320,20 @@ const CaptureImageInner = ({ locale = "en" }: CaptureImageProps) => {
 
     saveQuotesMutation.mutate(payloads, {
       onSuccess: () => {
-        toast({
-          title: t(locale, "capture.quotesSaved"),
-          description: t(locale, "capture.successfullySaved").replace(
-            "{count}",
-            quotesMetadata.length.toString(),
-          ),
+        dispatchToastEvent({
+          titleKey: "capture.quotesSaved",
+          descriptionKey: "capture.successfullySaved",
           variant: "success",
+          interpolations: { count: quotesMetadata.length.toString() },
         });
         handleClearAll();
       },
       onError: (error) => {
-        toast({
-          title: t(locale, "capture.failedToSave"),
-          description: t(locale, "capture.errorSaving").replace(
-            "{error}",
-            error.message,
-          ),
+        dispatchToastEvent({
+          titleKey: "capture.failedToSave",
+          descriptionKey: "capture.errorSaving",
           variant: "destructive",
+          interpolations: { error: error.message },
         });
       },
     });

@@ -241,6 +241,8 @@
     "backToQuotes": "Volver a citas",
     "quoteNotFound": "Cita no encontrada",
     "privateQuote": "Esta cita es privada",
+    "privateQuoteTitle": "Cita privada",
+    "privateQuoteDescription": "No tienes permiso para ver esta cita.",
     "authorsFavorite": "Favorita del Autor",
     "viewQuote": "Ver cita",
     "showMore": "Mostrar más",
@@ -250,7 +252,9 @@
     "generic": "Ocurrió un error. Por favor, intenta de nuevo.",
     "notFound": "No encontrado",
     "unauthorized": "No autorizado",
-    "serverError": "Error del servidor. Por favor, intenta más tarde."
+    "serverError": "Error del servidor. Por favor, intenta más tarde.",
+    "rateLimitTitle": "Límite de solicitudes excedido",
+    "rateLimitDescription": "Demasiadas solicitudes. Por favor, espera un momento e intenta de nuevo."
   },
   "quotesManager": {
     "collectionCount": "cita",
@@ -279,6 +283,9 @@
     "quoteUpdated": "Cita actualizada",
     "deleteError": "No se pudieron eliminar las citas. Por favor, intenta de nuevo.",
     "updateError": "No se pudo actualizar la cita. Por favor, intenta de nuevo.",
+    "favoriteAdded": "Añadida a favoritos",
+    "favoriteRemoved": "Eliminada de favoritos",
+    "favoriteError": "No se pudo actualizar el favorito. Por favor, intenta de nuevo.",
     "maxFavoritesReached": "Máximo de favoritos alcanzado",
     "maxFavoritesDescription": "Solo puedes tener {max} citas favoritas. Elimina una primero.",
     "noResults": "No se encontraron resultados",

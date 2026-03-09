@@ -241,6 +241,8 @@
     "backToQuotes": "Back to quotes",
     "quoteNotFound": "Quote not found",
     "privateQuote": "This quote is private",
+    "privateQuoteTitle": "Private quote",
+    "privateQuoteDescription": "You don't have permission to view this quote.",
     "authorsFavorite": "Author's Favorite",
     "viewQuote": "View quote",
     "showMore": "Show more",
@@ -250,7 +252,9 @@
     "generic": "An error occurred. Please try again.",
     "notFound": "Not found",
     "unauthorized": "Unauthorized",
-    "serverError": "Server error. Please try again later."
+    "serverError": "Server error. Please try again later.",
+    "rateLimitTitle": "Rate limit exceeded",
+    "rateLimitDescription": "Too many requests. Please wait a moment and try again."
   },
   "quotesManager": {
     "collectionCount": "quote",
@@ -279,6 +283,9 @@
     "quoteUpdated": "Quote updated",
     "deleteError": "Failed to delete quotes. Please try again.",
     "updateError": "Failed to update quote. Please try again.",
+    "favoriteAdded": "Added to favorites",
+    "favoriteRemoved": "Removed from favorites",
+    "favoriteError": "Failed to update favorite. Please try again.",
     "maxFavoritesReached": "Maximum favorites reached",
     "maxFavoritesDescription": "You can only have {max} favorite quotes. Remove one first.",
     "noResults": "No results found",

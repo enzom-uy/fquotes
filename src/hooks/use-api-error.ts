@@ -1,4 +1,4 @@
-import { toast } from "@/hooks/use-toast";
+import { dispatchToastEvent } from "@/components/global-toast-manager";
 
 export function handleApiError(error: unknown, defaultMessage?: string): string {
   if (!error) return defaultMessage || "An unknown error occurred";
@@ -12,13 +12,12 @@ export function handleApiError(error: unknown, defaultMessage?: string): string 
   const status = err.response?.status ?? err.status;
 
   if (status === 429) {
-    const message = "Too many requests. Please wait a moment and try again.";
-    toast({
-      title: "Rate limit exceeded",
-      description: message,
+    dispatchToastEvent({
+      titleKey: "errors.rateLimitTitle",
+      descriptionKey: "errors.rateLimitDescription",
       variant: "destructive",
     });
-    return message;
+    return "Too many requests. Please wait a moment and try again.";
   }
 
   const message = err.response?.data?.message || err.message || defaultMessage || "An error occurred";

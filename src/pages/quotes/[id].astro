@@ -56,7 +56,7 @@ const userId = session?.userId
 const userIsOwner = userId && quote ? userId === quote.userId : false
 
 if (quote && !quote.isPublic && !userIsOwner) {
-  return Astro.redirect(getLocalizedPath('/', locale))
+  return Astro.redirect(getLocalizedPath('/?privateQuote=true', locale))
 }
 
 const pageTitle = quote 

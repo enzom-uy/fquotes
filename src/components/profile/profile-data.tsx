@@ -2,7 +2,7 @@ import { useState } from "react";
 import { BookOpen, Star, Frown } from "lucide-react";
 import { useFavoriteToggle, MAX_FAVORITES } from "@/hooks/use-favorite-toggle";
 import { QueryProvider } from "../query-provider";
-import { toast } from "@/hooks/use-toast";
+import { dispatchToastEvent } from "@/components/global-toast-manager";
 import { QuoteCard, type QuoteData } from "../quote-card";
 import { t, type Locale, getLocalizedPath } from "@/i18n";
 
@@ -78,12 +78,11 @@ function ProfileData({
 
   const handleToggleFavorite = (quoteId: string, newIsFavorite: boolean) => {
     if (newIsFavorite && favoriteQuotes.length >= MAX_FAVORITES) {
-      toast({
-        title: t(locale, "quotesManager.maxFavoritesReached"),
-        description: t(locale, "quotesManager.maxFavoritesDescription", {
-          max: MAX_FAVORITES.toString(),
-        }),
+      dispatchToastEvent({
+        titleKey: "quotesManager.maxFavoritesReached",
+        descriptionKey: "quotesManager.maxFavoritesDescription",
         variant: "destructive",
+        interpolations: { max: MAX_FAVORITES.toString() },
       });
       return;
     }
@@ -250,9 +249,9 @@ export function ProfileDataComponent(props: ProfileDataProps) {
   const { error } = props;
 
   if (error) {
-    toast({
-      title: t(props.locale || "en", "errors.generic"),
-      description: t(props.locale || "en", "errors.serverError"),
+    dispatchToastEvent({
+      titleKey: "errors.generic",
+      descriptionKey: "errors.serverError",
       variant: "destructive",
     });
   }

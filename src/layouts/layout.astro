@@ -4,6 +4,8 @@ import '@/styles/globals.css'
 import Navbar from '@/components/navbar.astro'
 import Footer from '@/components/footer.astro'
 import { Toaster } from '@/components/ui/toaster'
+import { GlobalToastManager } from '@/components/global-toast-manager'
+import type { Locale } from '@/i18n'
 
 interface Props {
   title?: string
@@ -18,6 +20,8 @@ const session = Astro.locals.session
 
 // Only show navbar if user is authenticated and showNavbar is true
 const shouldShowNavbar = showNavbar && session && user
+
+const locale = (Astro.currentLocale || 'en') as Locale
 ---
 
 <!doctype html>
@@ -39,6 +43,7 @@ const shouldShowNavbar = showNavbar && session && user
     </main>
     <Footer />
     <Toaster client:idle transition:persist />
+    <GlobalToastManager client:load locale={locale} transition:persist />
 
     <script is:inline>
       // Guard against duplicate listeners (script re-runs on each page)
