@@ -8,6 +8,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { LOCALE_COOKIE_NAME } from "@/lib/locale-cookie";
 
 const locales = {
   en: { name: "English", flag: "🇺🇸" },
@@ -33,6 +34,12 @@ export function LanguageSwitcher() {
   }, []);
 
   const switchLocale = (newLocale: Locale) => {
+    // Persist preference in a cookie so the middleware can redirect future
+    // requests (including shared links) to the user's preferred locale
+    // without any client-side flash or double page fetch.
+    const maxAge = 365 * 24 * 60 * 60;
+    document.cookie = `${LOCALE_COOKIE_NAME}=${newLocale}; Path=/; Max-Age=${maxAge}; SameSite=Lax`;
+
     const currentPath = window.location.pathname;
     let newPath = currentPath;
 

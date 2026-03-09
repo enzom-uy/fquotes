@@ -18,8 +18,8 @@ const { title = 'QuoteKeeper', showNavbar = true } = Astro.props
 const user = Astro.locals.user
 const session = Astro.locals.session
 
-// Only show navbar if user is authenticated and showNavbar is true
-const shouldShowNavbar = showNavbar && session && user
+// Only show navbar if showNavbar prop is true (user can be null — navbar handles it)
+  const shouldShowNavbar = showNavbar
 
 const locale = (Astro.currentLocale || 'en') as Locale
 ---

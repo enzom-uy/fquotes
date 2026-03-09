@@ -57,7 +57,7 @@ const homePath = getLocalizedPath('/', locale);
         {/* Language Switcher - Always visible */}
         <LanguageSwitcher client:idle />
 
-        {user ? (
+        {user && (
           <>
             {/* User Dropdown - Desktop */}
             <div class="hidden md:block">
@@ -78,13 +78,6 @@ const homePath = getLocalizedPath('/', locale);
               client:idle
             />
           </>
-        ) : (
-          <a
-            href={homePath}
-            class="px-4 py-2 text-sm font-medium text-foreground-muted hover:text-foreground transition-colors"
-          >
-            {t.common.signIn}
-          </a>
         )}
       </div>
     </div>
