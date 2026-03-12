@@ -6,7 +6,6 @@ import {
   SUPPORTED_LOCALES,
   SupportedLocale,
 } from "@/lib/locale-cookie";
-import { checkIfProfileCompleted } from "./lib/utils";
 
 const BACKEND_AUTH_URL =
   import.meta.env.PUBLIC_BETTER_AUTH_URL || "http://localhost:5000";
@@ -68,13 +67,14 @@ const profileCompletedMiddleware = defineMiddleware(async (context, next) => {
   console.log(user);
   if (!user) return context.redirect("/");
 
-  const profileCompleted = checkIfProfileCompleted(
-    Number(user.createdAt),
-    Number(user.updatedAt),
-  );
-
-  if (!profileCompleted) {
-    return context.redirect("/create-profile");
+  if (!user.profileCompleted) {
+    const locale = context.currentLocale || "en";
+    return context.redirect(
+      `/${locale === "en" ? "" : locale + "/"}create-profile`.replace(
+        "//",
+        "/",
+      ),
+    );
   }
 
   return next();

@@ -3,7 +3,6 @@ export const prerender = false
 import Layout from '@/layouts/layout.astro'
 import { CreateProfileForm } from '@/components/auth/create-profile-form'
 import { getTranslations, type Locale, getLocalizedPath } from '@/i18n'
-import { checkIfProfileCompleted } from '@/lib/utils'
 
 const { user } = Astro.locals
 
@@ -14,8 +13,7 @@ if (!user) {
     return Astro.redirect(getLocalizedPath('/', locale))
 }
 
-const profileCompleted = checkIfProfileCompleted(Number(user.createdAt), Number(user.updatedAt))
-if (profileCompleted) {
+if (user.profileCompleted) {
     return Astro.redirect(getLocalizedPath('/profile', locale))
 }
 
