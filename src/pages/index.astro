@@ -6,6 +6,7 @@ import { GoogleSignInButton } from '@/components/auth/google-sign-in-button'
 import { CaptureImage } from '@/components/capture/capture-image'
 import { LanguageSwitcher } from '@/components/language-switcher'
 import { getTranslations, type Locale, getLocalizedPath } from '@/i18n'
+import { checkIfProfileCompleted } from '@/lib/utils'
 
 export const prerender = false
 
@@ -16,16 +17,14 @@ const session = Astro.locals.session
 const locale = (Astro.currentLocale || 'en') as Locale
 const t = getTranslations(locale)
 
-let profileCompleted = true
 if (session && user) {
-  const createdAt = new Date(user.createdAt).getTime()
-  const updatedAt = new Date(user.updatedAt).getTime()
-  const THRESHOLD_MS = 5000 // 5 seconds
-  profileCompleted = (updatedAt - createdAt) > THRESHOLD_MS
+const profileCompleted = checkIfProfileCompleted(Number(user.createdAt), Number(user.updatedAt))
+console.log(profileCompleted)
   
   if (!profileCompleted) {
     return Astro.redirect(getLocalizedPath('/create-profile', locale))
   }
+
 }
 ---
 

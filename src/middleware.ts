@@ -1,8 +1,15 @@
 import { defineMiddleware, sequence } from "astro:middleware";
 import { middleware } from "astro:i18n";
-import { getLocaleFromCookie, buildLocaleCookieHeader } from "@/lib/locale-cookie";
+import {
+  getLocaleFromCookie,
+  buildLocaleCookieHeader,
+  SUPPORTED_LOCALES,
+  SupportedLocale,
+} from "@/lib/locale-cookie";
+import { checkIfProfileCompleted } from "./lib/utils";
 
-const BACKEND_AUTH_URL = import.meta.env.PUBLIC_BETTER_AUTH_URL || "http://localhost:5000";
+const BACKEND_AUTH_URL =
+  import.meta.env.PUBLIC_BETTER_AUTH_URL || "http://localhost:5000";
 
 const authMiddleware = defineMiddleware(async (context, next) => {
   const cookie = context.request.headers.get("cookie");
@@ -14,10 +21,9 @@ const authMiddleware = defineMiddleware(async (context, next) => {
   try {
     // Call backend directly to avoid middleware loop
     // (middleware would trigger again if we call our own /api/auth/get-session)
-    const response = await fetch(
-      `${BACKEND_AUTH_URL}/api/auth/get-session`,
-      { headers: { cookie } }
-    );
+    const response = await fetch(`${BACKEND_AUTH_URL}/api/auth/get-session`, {
+      headers: { cookie },
+    });
 
     if (response.ok) {
       const data = await response.json();
@@ -31,6 +37,46 @@ const authMiddleware = defineMiddleware(async (context, next) => {
     context.locals.user = null;
     context.locals.session = null;
   }
+  return next();
+});
+
+const routesWithoutProfileCompletedCheck = [
+  "/",
+  "/create-profile",
+  "/es",
+  "/es/create-profile",
+];
+
+const profileCompletedMiddleware = defineMiddleware(async (context, next) => {
+  const pathname = context.url.pathname;
+
+  const segments = pathname.split("/");
+  const pathWithoutLocale = SUPPORTED_LOCALES.includes(
+    segments[1] as SupportedLocale,
+  )
+    ? "/" + segments.slice(2).join("/")
+    : pathname;
+
+  if (pathWithoutLocale.startsWith("/api")) {
+    return next();
+  }
+
+  if (routesWithoutProfileCompletedCheck.includes(pathWithoutLocale))
+    return next();
+
+  const user = context.locals.user;
+  console.log(user);
+  if (!user) return context.redirect("/");
+
+  const profileCompleted = checkIfProfileCompleted(
+    Number(user.createdAt),
+    Number(user.updatedAt),
+  );
+
+  if (!profileCompleted) {
+    return context.redirect("/create-profile");
+  }
+
   return next();
 });
 
@@ -75,10 +121,14 @@ const localePreferenceMiddleware = defineMiddleware(async (context, next) => {
     context.request,
     Symbol.for("astro.originPathname"),
   ) as string | undefined;
-  const originPathname = encodedOrigin ? decodeURIComponent(encodedOrigin) : null;
+  const originPathname = encodedOrigin
+    ? decodeURIComponent(encodedOrigin)
+    : null;
   // Normalise trailing slashes before comparing
   const normCurrent = pathname.replace(/\/$/, "") || "/";
-  const normOrigin = originPathname ? originPathname.replace(/\/$/, "") || "/" : null;
+  const normOrigin = originPathname
+    ? originPathname.replace(/\/$/, "") || "/"
+    : null;
   const isRewrite = normOrigin !== null && normOrigin !== normCurrent;
   if (isRewrite) return next();
 
@@ -88,9 +138,10 @@ const localePreferenceMiddleware = defineMiddleware(async (context, next) => {
   // If no cookie exists yet, set the default (en) and fall through to
   // redirect logic — so a first-time visitor landing on /es/... is
   // immediately redirected to the English version.
-  const setCookieHeader = getLocaleFromCookie(cookieHeader) === null
-    ? buildLocaleCookieHeader("en")
-    : null;
+  const setCookieHeader =
+    getLocaleFromCookie(cookieHeader) === null
+      ? buildLocaleCookieHeader("en")
+      : null;
 
   // Detect the locale currently encoded in the URL
   const urlLocale =
@@ -113,7 +164,8 @@ const localePreferenceMiddleware = defineMiddleware(async (context, next) => {
     preferredLocale === "en" ? stripped : `/${preferredLocale}${stripped}`;
 
   const redirectResponse = context.redirect(newPath + search, 302);
-  if (setCookieHeader) redirectResponse.headers.append("Set-Cookie", setCookieHeader);
+  if (setCookieHeader)
+    redirectResponse.headers.append("Set-Cookie", setCookieHeader);
   return redirectResponse;
 });
 
@@ -133,4 +185,5 @@ export const onRequest = sequence(
   authMiddleware,
   localePreferenceMiddleware,
   i18nMiddleware,
+  profileCompletedMiddleware,
 );
