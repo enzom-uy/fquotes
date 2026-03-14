@@ -21,12 +21,16 @@ export const ALL: APIRoute = async ({ request, params }) => {
   const headers = new Headers(request.headers);
   headers.set("host", new URL(baseURL).host);
   headers.delete("connection");
+  headers.delete("content-length");
   
-  // Get request body if applicable
-  const body =
-    request.method !== "GET" && request.method !== "HEAD"
-      ? await request.arrayBuffer()
-      : undefined;
+  // Get request body
+  let body: BodyInit | undefined;
+  
+  if (request.method !== "GET" && request.method !== "HEAD") {
+    // Clone the request to read the body without consuming it
+    const clonedRequest = request.clone();
+    body = await clonedRequest.blob();
+  }
   
   // Forward request to backend
   const response = await fetch(targetURL, {

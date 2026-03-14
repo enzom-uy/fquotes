@@ -46,14 +46,12 @@ function ProfileSettingsInner({
   const updateProfile = useUpdateProfile();
 
   const handleSavePhoto = async () => {
-    if (!imageFile && !user.image && !markForDeletion) return;
-    
     setError(null);
     
     try {
       await updateProfile.mutateAsync({
-        email: user.email,
-        name: user.name,
+        email: user.email || "",
+        name: user.name || "",
         imageFile: markForDeletion ? undefined : (imageFile || undefined),
         deleteCurrentImage: markForDeletion ? true : undefined,
       });
@@ -165,7 +163,7 @@ function ProfileSettingsInner({
                   <Button
                     size="sm"
                     onClick={handleSavePhoto}
-                    disabled={updateProfile.isPending || (!imageFile && !markForDeletion && !!user.image)}
+                    disabled={updateProfile.isPending}
                   >
                     {updateProfile.isPending ? (
                       <Loader2 size={16} className="animate-spin" />
