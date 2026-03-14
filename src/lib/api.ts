@@ -36,6 +36,11 @@ async function handleResponse<T>(response: Response): Promise<T> {
   return response.json() as Promise<T>;
 }
 
+export interface UploadResult {
+  url: string;
+  publicId: string;
+}
+
 export const api = {
   async get<T>(path: string, options?: RequestInit): Promise<T> {
     const res = await fetch(`${BACKEND_URL}${path}`, {
@@ -90,5 +95,64 @@ export const api = {
       ...options,
     });
     return await handleResponse<T>(res);
+  },
+
+  async uploadImages(
+    files: File[],
+    folder: "profile_pictures",
+  ): Promise<UploadResult[]> {
+    const formData = new FormData();
+    files.forEach((file) => {
+      formData.append("images", file);
+    });
+
+    const res = await fetch(
+      `${BACKEND_URL}/images/upload?cldFolder=${folder}`,
+      {
+        method: "POST",
+        credentials: "include",
+        body: formData,
+      },
+    );
+
+    const data = await handleResponse<{ uploaded: UploadResult[] }>(res);
+    return data.uploaded;
+  },
+
+  async deleteImages(publicIds: string[]): Promise<void> {
+    const res = await fetch(`${BACKEND_URL}/images/delete`, {
+      method: "DELETE",
+      headers: { "Content-Type": "application/json" },
+      credentials: "include",
+      body: JSON.stringify({ publicIds }),
+    });
+    await handleResponse(res);
+  },
+
+  async updateProfileWithImage(
+    data: { email: string; name: string; imageUrl?: string },
+    imageFile?: File,
+    deleteCurrentImage?: boolean,
+  ): Promise<unknown> {
+    const formData = new FormData();
+    formData.append("email", data.email);
+    formData.append("name", data.name);
+    if (data.imageUrl) {
+      formData.append("imageUrl", data.imageUrl);
+    }
+    if (imageFile) {
+      formData.append("image", imageFile);
+    }
+    if (deleteCurrentImage) {
+      formData.append("deleteCurrentImage", "true");
+    }
+
+    const res = await fetch(`${BACKEND_URL}/user/profile`, {
+      method: "PATCH",
+      credentials: "include",
+      body: formData,
+    });
+
+    return handleResponse(res);
   },
 };

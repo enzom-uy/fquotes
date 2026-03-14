@@ -9,6 +9,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { t, getLocalizedPath, type Locale } from "@/i18n";
+import { UserAvatar } from "@/components/ui/user-avatar";
 
 interface NavbarMenuProps {
   currentPath: string;
@@ -60,18 +61,7 @@ export const NavbarMenu = ({
           className="md:hidden flex items-center gap-1 rounded-lg hover:bg-background-muted transition-colors p-1"
           aria-label="Open menu"
         >
-          {userImage ? (
-            <img
-              src={userImage}
-              alt={userName || "User"}
-              className="w-8 h-8 rounded-full object-cover"
-              referrerPolicy="no-referrer"
-            />
-          ) : (
-            <div className="w-8 h-8 rounded-full bg-background-muted flex items-center justify-center">
-              <User size={18} className="text-foreground-muted" />
-            </div>
-          )}
+          <UserAvatar src={userImage} name={userName || "User"} size="sm" />
           <ChevronDown size={14} className="text-foreground-muted" />
         </button>
       </DropdownMenuTrigger>
@@ -100,16 +90,7 @@ export const NavbarMenu = ({
             href={getLocalizedPath("/profile", locale)}
             className="flex items-center gap-2 cursor-pointer"
           >
-            {userImage ? (
-              <img
-                src={userImage}
-                alt={userName || "User"}
-                className="w-4 h-4 rounded-full object-cover"
-                referrerPolicy="no-referrer"
-              />
-            ) : (
-              <User size={16} />
-            )}
+            <UserAvatar src={userImage} name={userName || "User"} size="xs" />
             {userName || t(locale, "nav.profile")}
           </a>
         </DropdownMenuItem>

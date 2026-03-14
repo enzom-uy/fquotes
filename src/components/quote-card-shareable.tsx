@@ -9,10 +9,22 @@ interface QuoteCardShareableProps {
   userImage?: string | null;
 }
 
+function getInitials(name: string): string {
+  const cleaned = name.trim();
+  if (!cleaned) return '?';
+  const parts = cleaned.split(/\s+/);
+  if (parts.length === 1) {
+    return parts[0].slice(0, 2).toUpperCase();
+  }
+  return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
+}
+
 export const QuoteCardShareable = React.forwardRef<
   HTMLDivElement,
   QuoteCardShareableProps
 >(({ quote, bookTitle, authorName, coverUrl, userName, userImage }, ref) => {
+  const initials = userName ? getInitials(userName) : null;
+
   return (
     <div
       ref={ref}
@@ -112,7 +124,7 @@ export const QuoteCardShareable = React.forwardRef<
         {/* User info */}
         {userName ? (
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-            {userImage && (
+            {userImage ? (
               <img
                 src={userImage}
                 alt={userName}
@@ -123,7 +135,24 @@ export const QuoteCardShareable = React.forwardRef<
                   objectFit: 'cover',
                 }}
               />
-            )}
+            ) : initials ? (
+              <div
+                style={{
+                  width: '22px',
+                  height: '22px',
+                  borderRadius: '50%',
+                  background: 'linear-gradient(135deg, #89b4fa 0%, #f5c2e7 100%)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  fontSize: '9px',
+                  fontWeight: '600',
+                  color: '#1e1e2e',
+                }}
+              >
+                {initials}
+              </div>
+            ) : null}
             <span style={{ fontSize: '11px', color: '#585b70', fontWeight: '500' }}>
               {userName}
             </span>

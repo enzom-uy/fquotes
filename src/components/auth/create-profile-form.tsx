@@ -1,7 +1,7 @@
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { Button } from "../ui/button";
 import { Input } from "../ui/input";
 import { FileUpload } from "../ui/file-upload";
@@ -21,7 +21,7 @@ import { t, type Locale, getLocalizedPath } from "@/i18n";
 
 const getProfileFormSchema = (locale: Locale) =>
   z.object({
-    image: z.string().optional(),
+    imageUrl: z.string().optional(),
     email: z.string().email(t(locale, "createProfile.invalidEmail")),
     name: z
       .string()
@@ -63,12 +63,13 @@ const CreateProfileFormInner = ({
   locale = "en",
 }: CreateProfileFormProps) => {
   const [error, setError] = useState<string | null>(null);
+  const [imageFile, setImageFile] = useState<File | null>(null);
   const updateProfile = useUpdateProfile();
 
   const form = useForm<ProfileFormValues>({
     resolver: zodResolver(getProfileFormSchema(locale)),
     defaultValues: {
-      image: profilePic,
+      imageUrl: profilePic,
       email: email,
       name: name,
     },
@@ -77,18 +78,26 @@ const CreateProfileFormInner = ({
   const onSubmit = (data: ProfileFormValues) => {
     setError(null);
 
-    updateProfile.mutate(data, {
-      onSuccess: () => {
-        window.location.href = getLocalizedPath('/profile', locale);
+    updateProfile.mutate(
+      {
+        email: data.email,
+        name: data.name,
+        imageUrl: data.imageUrl,
+        imageFile: imageFile || undefined,
       },
-      onError: (err) => {
-        if (err instanceof ApiError) {
-          setError(err.message || t(locale, "createProfile.createError"));
-        } else {
-          setError(t(locale, "createProfile.networkError"));
-        }
+      {
+        onSuccess: () => {
+          window.location.href = getLocalizedPath('/profile', locale);
+        },
+        onError: (err) => {
+          if (err instanceof ApiError) {
+            setError(err.message || t(locale, "createProfile.createError"));
+          } else {
+            setError(t(locale, "createProfile.networkError"));
+          }
+        },
       },
-    });
+    );
   };
 
   return (
@@ -105,12 +114,19 @@ const CreateProfileFormInner = ({
 
         <FormField
           control={form.control}
-          name="image"
+          name="imageUrl"
           render={({ field }) => (
             <FormItem>
               <FormLabel>{t(locale, "createProfile.profilePicture")}</FormLabel>
               <FormControl>
-                <FileUpload value={field.value} disabled={updateProfile.isPending} />
+                <FileUpload 
+                  value={field.value} 
+                  onChange={(file) => {
+                    setImageFile(file);
+                    field.onChange(file ? URL.createObjectURL(file) : undefined);
+                  }}
+                  disabled={updateProfile.isPending} 
+                />
               </FormControl>
               <FormDescription>
                 {t(locale, "createProfile.profilePictureHelp")}

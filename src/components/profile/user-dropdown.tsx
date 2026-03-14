@@ -9,6 +9,7 @@ import {
 import { User, BookMarked, LogOut, ChevronDown, Settings } from "lucide-react";
 import { signOut } from "@/lib/auth-client";
 import { t, getLocalizedPath, type Locale } from "@/i18n";
+import { UserAvatar } from "@/components/ui/user-avatar";
 
 interface UserDropdownProps {
   userName: string;
@@ -26,18 +27,7 @@ export const UserDropdown = ({ userName, userImage, locale = "en" }: UserDropdow
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
         <button className="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-background-muted transition-colors group outline-none">
-          {userImage ? (
-            <img
-              src={userImage}
-              alt={userName}
-              className="w-8 h-8 rounded-full object-cover border-2 border-border group-hover:border-primary transition-colors"
-              referrerPolicy="no-referrer"
-            />
-          ) : (
-            <div className="w-8 h-8 rounded-full bg-gradient-to-br from-primary to-accent flex items-center justify-center text-background font-semibold text-sm">
-              {userName.charAt(0).toUpperCase()}
-            </div>
-          )}
+          <UserAvatar src={userImage} name={userName} size="sm" />
           <span className="text-sm font-medium text-foreground-muted group-hover:text-foreground transition-colors">
             {userName.split(" ")[0]}
           </span>

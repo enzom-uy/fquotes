@@ -82,7 +82,11 @@
       "changePicture": "Mudar foto",
       "editPhoto": "Editar foto",
       "editProfile": "Editar Perfil",
-      "nicknameWarning": "Você só pode alterar seu apelido a cada 30 dias."
+      "nicknameWarning": "Você só pode alterar seu apelido a cada 30 dias.",
+      "changePhoto": "Mudar foto",
+      "removePhoto": "Remover foto",
+      "photoUpdateSuccess": "Foto de perfil atualizada com sucesso",
+      "photoMarkedForDeletion": "A foto será removida ao salvar"
     },
     "quotes": {
       "title": "Citações",

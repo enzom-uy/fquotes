@@ -5,6 +5,7 @@ import { QueryProvider } from "../query-provider";
 import { dispatchToastEvent } from "@/components/global-toast-manager";
 import { QuoteCard, type QuoteData } from "../quote-card";
 import { t, type Locale, getLocalizedPath } from "@/i18n";
+import { UserAvatar } from "@/components/ui/user-avatar";
 
 export interface ProfileDataProps {
   user: {
@@ -98,18 +99,7 @@ function ProfileData({
       {/* Profile Card */}
       <div className="bg-background-elevated border border-border rounded-2xl overflow-hidden">
         <div className="flex items-center gap-5 p-6">
-          {user.image ? (
-            <img
-              src={user.image}
-              alt={user.name}
-              className="w-20 h-20 rounded-full object-cover border-3 border-primary flex-shrink-0"
-              referrerPolicy="no-referrer"
-            />
-          ) : (
-            <div className="w-20 h-20 rounded-full bg-gradient-to-br from-primary to-accent flex items-center justify-center text-background font-bold text-2xl flex-shrink-0">
-              {user.name.charAt(0).toUpperCase()}
-            </div>
-          )}
+          <UserAvatar src={user.image} name={user.name} size="xl" />
           <div className="min-w-0">
             <h1 className="text-2xl font-bold truncate">{user.name}</h1>
             <p className="text-sm text-foreground-muted truncate">

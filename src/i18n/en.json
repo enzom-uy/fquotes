@@ -82,7 +82,11 @@
       "changePicture": "Change picture",
       "editPhoto": "Edit photo",
       "editProfile": "Edit Profile",
-      "nicknameWarning": "You can only change your nickname every 30 days."
+      "nicknameWarning": "You can only change your nickname every 30 days.",
+      "changePhoto": "Change photo",
+      "removePhoto": "Remove photo",
+      "photoUpdateSuccess": "Profile photo updated successfully",
+      "photoMarkedForDeletion": "Photo will be removed when you save"
     },
     "quotes": {
       "title": "Quotes",
