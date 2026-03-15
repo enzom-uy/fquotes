@@ -4,11 +4,18 @@ import tailwind from "@astrojs/tailwind";
 import netlify from "@astrojs/netlify";
 import { SUPPORTED_LOCALES } from "./src/lib/locale-cookie";
 
+import sitemap from "@astrojs/sitemap";
+
 export default defineConfig({
+  site: "https://quotekeeper.netlify.app",
   integrations: [
     react(),
     tailwind({
       applyBaseStyles: false,
+    }),
+    sitemap({
+      filter: (page) =>
+        !page.includes("/settings") && !page.includes("/quotes"),
     }),
   ],
 
@@ -24,3 +31,4 @@ export default defineConfig({
     },
   },
 });
+
